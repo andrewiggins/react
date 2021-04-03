@@ -376,15 +376,15 @@ function getPlugins(
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
     // Apply dead code elimination and/or minification.
-    isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
+    // isProduction &&
+    //   closure(
+    //     Object.assign({}, closureOptions, {
+    //       // Don't let it create global variables in the browser.
+    //       // https://github.com/facebook/react/issues/10909
+    //       assume_function_wrapper: !isUMDBundle,
+    //       renaming: !shouldStayReadable,
+    //     })
+    //   ),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
@@ -460,7 +460,7 @@ async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle.entry, bundle.global, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = getFormat(bundleType);
+  const format = 'es';
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
@@ -474,6 +474,7 @@ async function createBundle(bundle, bundleType) {
       resolvedEntry = resolvedFBEntry;
     }
   }
+  console.log(resolvedEntry);
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -657,16 +658,16 @@ async function buildEverything() {
     bundles.push(
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
-      [bundle, NODE_DEV],
-      [bundle, NODE_PROD],
-      [bundle, NODE_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      // [bundle, UMD_PROFILING],
+      // [bundle, NODE_DEV],
+      // [bundle, NODE_PROD],
+      // [bundle, NODE_PROFILING],
+      // [bundle, RN_OSS_DEV],
+      // [bundle, RN_OSS_PROD],
+      // [bundle, RN_OSS_PROFILING],
+      // [bundle, RN_FB_DEV],
+      // [bundle, RN_FB_PROD],
+      // [bundle, RN_FB_PROFILING]
     );
 
     if (__EXPERIMENTAL__) {
@@ -674,7 +675,7 @@ async function buildEverything() {
       bundles.push(
         [bundle, FB_WWW_DEV],
         [bundle, FB_WWW_PROD],
-        [bundle, FB_WWW_PROFILING]
+        // [bundle, FB_WWW_PROFILING]
       );
     }
   }
