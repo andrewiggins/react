@@ -135,5 +135,8 @@
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
     "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
+  },
+  "volta": {
+    "node": "14.21.3"
   }
 }

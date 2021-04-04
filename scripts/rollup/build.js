@@ -36,7 +36,7 @@ const __EXPERIMENTAL__ =
 
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
-process.on('unhandledRejection', err => {
+process.on('unhandledRejection', (err) => {
   if (loggedErrors.has(err)) {
     // No need to print it twice.
     process.exit(1);
@@ -410,15 +410,15 @@ function getPlugins(
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
-    isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
+    // isProduction &&
+    //   closure(
+    //     Object.assign({}, closureOptions, {
+    //       // Don't let it create global variables in the browser.
+    //       // https://github.com/facebook/react/issues/10909
+    //       assume_function_wrapper: !isUMDBundle,
+    //       renaming: !shouldStayReadable,
+    //     })
+    //   ),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
@@ -447,7 +447,7 @@ function getPlugins(
       getSize: (size, gzip) => {
         const currentSizes = Stats.currentBuildResults.bundleSizes;
         const recordIndex = currentSizes.findIndex(
-          record =>
+          (record) =>
             record.filename === filename && record.bundleType === bundleType
         );
         const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
@@ -470,7 +470,7 @@ function shouldSkipBundle(bundle, bundleType) {
   }
   if (requestedBundleTypes.length > 0) {
     const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+      (requestedType) => bundleType.indexOf(requestedType) === -1
     );
     if (isAskingForDifferentType) {
       return true;
@@ -482,7 +482,7 @@ function shouldSkipBundle(bundle, bundleType) {
       // entry ends in something. Such as `react-dom/index` only matches
       // `react-dom` but not `react-dom/server`. Everything else is fuzzy
       // search.
-      requestedName =>
+      (requestedName) =>
         (bundle.entry + '/index.js').indexOf(requestedName) === -1
     );
     if (isAskingForDifferentNames) {
@@ -534,7 +534,7 @@ async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = getFormat(bundleType);
+  const format = 'es';
   const packageName = Packaging.getPackageName(bundle.entry);
 
   const isFBWWWBundle =
@@ -552,6 +552,8 @@ async function createBundle(bundle, bundleType) {
     isFBWWWBundle || isFBRNBundle
   );
 
+  console.log(resolvedEntry);
+
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
     bundleType === UMD_PROD ||
@@ -565,7 +567,7 @@ async function createBundle(bundle, bundleType) {
 
   const importSideEffects = Modules.getImportSideEffects();
   const pureExternalModules = Object.keys(importSideEffects).filter(
-    module => !importSideEffects[module]
+    (module) => !importSideEffects[module]
   );
 
   const rollupConfig = {
@@ -574,7 +576,8 @@ async function createBundle(bundle, bundleType) {
       pureExternalModules,
     },
     external(id) {
-      const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
+      const containsThisModule = (pkg) =>
+        id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {
         return true;
@@ -617,7 +620,7 @@ async function createBundle(bundle, bundleType) {
   if (isWatchMode) {
     rollupConfig.output = [rollupOutputOptions];
     const watcher = rollup.watch(rollupConfig);
-    watcher.on('event', async event => {
+    watcher.on('event', async (event) => {
       switch (event.code) {
         case 'BUNDLE_START':
           console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
@@ -728,22 +731,22 @@ async function buildEverything() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
     bundles.push(
-      [bundle, NODE_ES2015],
+      // [bundle, NODE_ES2015],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
-      [bundle, NODE_DEV],
-      [bundle, NODE_PROD],
-      [bundle, NODE_PROFILING],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      [bundle, UMD_PROFILING]
+      // [bundle, NODE_DEV],
+      // [bundle, NODE_PROD],
+      // [bundle, NODE_PROFILING],
+      // [bundle, FB_WWW_DEV],
+      // [bundle, FB_WWW_PROD],
+      // [bundle, FB_WWW_PROFILING],
+      // [bundle, RN_OSS_DEV],
+      // [bundle, RN_OSS_PROD],
+      // [bundle, RN_OSS_PROFILING],
+      // [bundle, RN_FB_DEV],
+      // [bundle, RN_FB_PROD],
+      // [bundle, RN_FB_PROFILING]
     );
   }
 
