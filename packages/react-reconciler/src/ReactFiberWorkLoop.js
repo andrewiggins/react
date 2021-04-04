@@ -575,6 +575,8 @@ function ensureRootIsScheduled(root: FiberRoot) {
 
   // TODO: If this is an update, we already read the current time. Pass the
   // time as an argument.
+  ReactTracer.enter('ensureRootIsScheduled', expirationTime);
+
   const currentTime = requestCurrentTimeForUpdate();
   const priorityLevel = inferPriorityFromExpirationTime(
     currentTime,
@@ -593,6 +595,8 @@ function ensureRootIsScheduled(root: FiberRoot) {
       existingCallbackPriority >= priorityLevel
     ) {
       // Existing callback is sufficient.
+      ReactTracer.log('existing callback is sufficient');
+      ReactTracer.exit();
       return;
     }
     // Need to schedule a new task.
@@ -624,6 +628,8 @@ function ensureRootIsScheduled(root: FiberRoot) {
   }
 
   root.callbackNode = callbackNode;
+
+  ReactTracer.exit();
 }
 
 // This is the entry point for every concurrent task, i.e. anything that
@@ -640,12 +646,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
+    ReactTracer.log(
+      'Bailing out of performConcurrentWorkOnRoot. didTimeout is true.',
+    );
     return null;
   }
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
+
+  ReactTracer.enter('performConcurrentWorkOnRoot', expirationTime);
+
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
     invariant(
@@ -678,6 +690,11 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           workLoopConcurrent();
           break;
         } catch (thrownValue) {
+          ReactTracer.unwindOnError(
+            thrownValue,
+            'performConcurrentWorkOnRoot',
+            expirationTime,
+          );
           handleError(root, thrownValue);
         }
       } while (true);
@@ -720,10 +737,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       if (root.callbackNode === originalCallbackNode) {
         // The task node scheduled for this root is the same one that's
         // currently executed. Need to return a continuation.
+
+        ReactTracer.exit();
+
         return performConcurrentWorkOnRoot.bind(null, root);
       }
     }
   }
+
+  ReactTracer.exit();
+
   return null;
 }
 
@@ -1015,6 +1038,11 @@ function performSyncWorkOnRoot(root) {
           workLoopSync();
           break;
         } catch (thrownValue) {
+          ReactTracer.unwindOnError(
+            thrownValue,
+            'performSyncWorkOnRoot',
+            expirationTime,
+          );
           handleError(root, thrownValue);
         }
       } while (true);
@@ -1056,6 +1084,7 @@ function performSyncWorkOnRoot(root) {
     }
   }
 
+  ReactTracer.exit();
   return null;
 }
 
@@ -1275,6 +1304,8 @@ function prepareFreshStack(root, expirationTime) {
 }
 
 function handleError(root, thrownValue) {
+  // TODO: ReactTracer.unwindOnError(thrownValue, 'renderRoot', expirationTime);
+
   do {
     try {
       // Reset module-level state that was set during the render phase.
@@ -1467,6 +1498,8 @@ function workLoopConcurrent() {
 }
 
 function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
+  ReactTracer.enter('performUnitOfWork', getComponentName(unitOfWork.type));
+
   // The current, flushed, state of this fiber is the alternate. Ideally
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
@@ -1492,6 +1525,8 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   }
 
   ReactCurrentOwner.current = null;
+
+  ReactTracer.exit();
   return next;
 }
 
@@ -1499,6 +1534,12 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
   // Attempt to complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
   workInProgress = unitOfWork;
+
+  ReactTracer.enter(
+    'completeUnitOfWork',
+    getComponentName(workInProgress.type),
+  );
+
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
@@ -1527,6 +1568,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
       if (next !== null) {
         // Completing this fiber spawned new work. Work on that next.
+        ReactTracer.exit();
         return next;
       }
 
@@ -1602,6 +1644,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // also captures and restarts.
         stopFailedWorkTimer(workInProgress);
         next.effectTag &= HostEffectMask;
+        ReactTracer.exit();
         return next;
       }
       stopWorkTimer(workInProgress);
@@ -1616,6 +1659,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
     const siblingFiber = workInProgress.sibling;
     if (siblingFiber !== null) {
       // If there is more work to do in this returnFiber, do that next.
+      ReactTracer.exit();
       return siblingFiber;
     }
     // Otherwise, return to the parent
@@ -1626,6 +1670,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
   if (workInProgressRootExitStatus === RootIncomplete) {
     workInProgressRootExitStatus = RootCompleted;
   }
+
+  ReactTracer.exit();
   return null;
 }
 
@@ -1723,7 +1769,10 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   const finishedWork = root.finishedWork;
   const expirationTime = root.finishedExpirationTime;
+  ReactTracer.enter('commitRoot', expirationTime);
+
   if (finishedWork === null) {
+    ReactTracer.exit();
     return null;
   }
   root.finishedWork = null;
@@ -2012,15 +2061,19 @@ function commitRootImpl(root, renderPriorityLevel) {
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
     // of the batch.
+    ReactTracer.exit();
     return null;
   }
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
+  ReactTracer.exit();
   return null;
 }
 
 function commitBeforeMutationEffects() {
+  ReactTracer.enter('commitBeforeMutationEffects');
+
   while (nextEffect !== null) {
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
@@ -2045,9 +2098,13 @@ function commitBeforeMutationEffects() {
     }
     nextEffect = nextEffect.nextEffect;
   }
+
+  ReactTracer.exit();
 }
 
 function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
+  ReactTracer.enter('commitMutationEffects');
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2073,7 +2130,9 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       effectTag & (Placement | Update | Deletion | Hydrating);
     switch (primaryEffectTag) {
       case Placement: {
+        ReactTracer.enter('commitPlacement');
         commitPlacement(nextEffect);
+        ReactTracer.exit();
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
         // TODO: findDOMNode doesn't rely on this any more but isMounted does
@@ -2083,14 +2142,18 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       }
       case PlacementAndUpdate: {
         // Placement
+        ReactTracer.enter('commitPlacement');
         commitPlacement(nextEffect);
+        ReactTracer.exit();
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
         nextEffect.effectTag &= ~Placement;
 
         // Update
         const current = nextEffect.alternate;
+        ReactTracer.enter('commitWork', getComponentName(nextEffect.type));
         commitWork(current, nextEffect);
+        ReactTracer.exit();
         break;
       }
       case Hydrating: {
@@ -2102,16 +2165,22 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
 
         // Update
         const current = nextEffect.alternate;
+        ReactTracer.enter('commitWork', getComponentName(nextEffect.type));
         commitWork(current, nextEffect);
+        ReactTracer.exit();
         break;
       }
       case Update: {
         const current = nextEffect.alternate;
+        ReactTracer.enter('commitWork', getComponentName(nextEffect.type));
         commitWork(current, nextEffect);
+        ReactTracer.exit();
         break;
       }
       case Deletion: {
+        ReactTracer.enter('commitDeletion');
         commitDeletion(root, nextEffect, renderPriorityLevel);
+        ReactTracer.exit();
         break;
       }
     }
@@ -2122,12 +2191,16 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
+
+  ReactTracer.exit();
 }
 
 function commitLayoutEffects(
   root: FiberRoot,
   committedExpirationTime: ExpirationTime,
 ) {
+  ReactTracer.enter('commitLayoutEffects');
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2153,6 +2226,8 @@ function commitLayoutEffects(
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
+
+  ReactTracer.exit();
 }
 
 export function flushPassiveEffects() {
@@ -2312,6 +2387,8 @@ export function pingSuspendedRoot(
   thenable: Thenable,
   suspendedTime: ExpirationTime,
 ) {
+  ReactTracer.enter('pingSuspendedRoot', suspendedTime);
+
   const pingCache = root.pingCache;
   if (pingCache !== null) {
     // The thenable resolved, so we no longer need to memoize, because it will
@@ -2347,17 +2424,26 @@ export function pingSuspendedRoot(
       // opportunity later. So we mark this render as having a ping.
       workInProgressRootHasPendingPing = true;
     }
+
+    ReactTracer.exit();
+
     return;
   }
 
   if (!isRootSuspendedAtTime(root, suspendedTime)) {
     // The root is no longer suspended at this time.
+
+    ReactTracer.exit();
+
     return;
   }
 
   const lastPingedTime = root.lastPingedTime;
   if (lastPingedTime !== NoWork && lastPingedTime < suspendedTime) {
     // There's already a lower priority ping scheduled.
+
+    ReactTracer.exit();
+
     return;
   }
 
@@ -2372,12 +2458,16 @@ export function pingSuspendedRoot(
 
   ensureRootIsScheduled(root);
   schedulePendingInteractions(root, suspendedTime);
+
+  // ReactTracer.exit();
 }
 
 function retryTimedOutBoundary(
   boundaryFiber: Fiber,
   retryTime: ExpirationTime,
 ) {
+  ReactTracer.enter('retryTimedOutBoundary', suspendedTime);
+
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
@@ -2397,6 +2487,8 @@ function retryTimedOutBoundary(
     ensureRootIsScheduled(root);
     schedulePendingInteractions(root, retryTime);
   }
+
+  ReactTracer.exit();
 }
 
 export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {

@@ -225,12 +225,16 @@ ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(
   children: ReactNodeList,
   callback: ?() => mixed,
 ): void {
+  ReactTracer.enter('ReactRoot.render');
+
   const root = this._internalRoot;
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
   updateContainer(children, root, null, callback);
+
+  ReactTracer.exit();
 };
 
 ReactRoot.prototype.unmount = ReactSyncRoot.prototype.unmount = function(

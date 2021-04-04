@@ -246,6 +246,8 @@ export function updateContainer(
     suspenseConfig,
   );
 
+  ReactTracer.enter('updateContainer', expirationTime);
+
   if (__DEV__) {
     if (ReactFiberInstrumentation.debugTool) {
       if (current.alternate === null) {
@@ -302,6 +304,7 @@ export function updateContainer(
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
 
+  ReactTracer.exit();
   return expirationTime;
 }
 

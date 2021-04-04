@@ -191,6 +191,8 @@ const classComponentUpdater = {
       suspenseConfig,
     );
 
+    ReactTracer.enter('enqueueSetState', expirationTime);
+
     const update = createUpdate(expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
@@ -202,6 +204,8 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    ReactTracer.exit();
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -212,6 +216,8 @@ const classComponentUpdater = {
       fiber,
       suspenseConfig,
     );
+
+    ReactTracer.enter('enqueueReplaceState', expirationTime);
 
     const update = createUpdate(expirationTime, suspenseConfig);
     update.tag = ReplaceState;
@@ -226,6 +232,8 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    ReactTracer.exit();
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -236,6 +244,8 @@ const classComponentUpdater = {
       fiber,
       suspenseConfig,
     );
+
+    ReactTracer.enter('enqueueForceUpdate', expirationTime);
 
     const update = createUpdate(expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
@@ -249,6 +259,8 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    ReactTracer.exit();
   },
 };
 

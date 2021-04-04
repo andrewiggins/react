@@ -210,7 +210,8 @@ if (__DEV__) {
       window.removeEventListener('error', handleWindowError);
     };
 
-    invokeGuardedCallbackImpl = invokeGuardedCallbackDev;
+    // Disable the dev complexity in invokeGuardedCallbackDev
+    // invokeGuardedCallbackImpl = invokeGuardedCallbackDev;
   }
 }
 

@@ -2815,6 +2815,8 @@ function beginWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
+  ReactTracer.log('beginWork', '-', getComponentName(workInProgress.type));
+
   const updateExpirationTime = workInProgress.expirationTime;
 
   if (__DEV__) {

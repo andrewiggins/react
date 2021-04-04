@@ -243,11 +243,16 @@ function commitBeforeMutationLifeCycles(
   current: Fiber | null,
   finishedWork: Fiber,
 ): void {
+  ReactTracer.enter('commitBeforeMutationLifecycles');
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
       commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
+
+      ReactTracer.exit();
+
       return;
     }
     case ClassComponent: {
@@ -285,6 +290,10 @@ function commitBeforeMutationLifeCycles(
               );
             }
           }
+          ReactTracer.log(
+            'getSnapshotBeforeUpdate',
+            getComponentName(finishedWork.type),
+          );
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -309,6 +318,9 @@ function commitBeforeMutationLifeCycles(
           stopPhaseTimer();
         }
       }
+
+      ReactTracer.exit();
+
       return;
     }
     case HostRoot:
@@ -317,6 +329,7 @@ function commitBeforeMutationLifeCycles(
     case HostPortal:
     case IncompleteClassComponent:
       // Nothing to do for these component types
+      ReactTracer.exit();
       return;
     default: {
       invariant(
@@ -414,6 +427,8 @@ function commitLifeCycles(
   finishedWork: Fiber,
   committedExpirationTime: ExpirationTime,
 ): void {
+  ReactTracer.enter('commitLifeCycles', getComponentName(finishedWork.type));
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -454,6 +469,12 @@ function commitLifeCycles(
               );
             }
           }
+
+          ReactTracer.log(
+            'componentDidMount',
+            getComponentName(finishedWork.type),
+          );
+
           instance.componentDidMount();
           stopPhaseTimer();
         } else {
@@ -491,6 +512,12 @@ function commitLifeCycles(
               );
             }
           }
+
+          ReactTracer.log(
+            'componentDidUpdate',
+            getComponentName(finishedWork.type),
+          );
+
           instance.componentDidUpdate(
             prevProps,
             prevState,
@@ -529,6 +556,12 @@ function commitLifeCycles(
         // We could update instance props and state here,
         // but instead we rely on them being set during last render.
         // TODO: revisit this when we implement resuming.
+
+        ReactTracer.log(
+          'commitUpdateQueue',
+          getComponentName(finishedWork.type),
+        );
+
         commitUpdateQueue(
           finishedWork,
           updateQueue,
@@ -536,6 +569,9 @@ function commitLifeCycles(
           committedExpirationTime,
         );
       }
+
+      ReactTracer.exit();
+
       return;
     }
     case HostRoot: {
@@ -552,6 +588,12 @@ function commitLifeCycles(
               break;
           }
         }
+
+        ReactTracer.log(
+          'commitUpdateQueue',
+          getComponentName(finishedWork.type),
+        );
+
         commitUpdateQueue(
           finishedWork,
           updateQueue,
@@ -559,6 +601,9 @@ function commitLifeCycles(
           committedExpirationTime,
         );
       }
+
+      ReactTracer.exit();
+
       return;
     }
     case HostComponent: {
@@ -574,14 +619,18 @@ function commitLifeCycles(
         commitMount(instance, type, props, finishedWork);
       }
 
+      ReactTracer.exit();
+
       return;
     }
     case HostText: {
       // We have no life-cycles associated with text.
+      ReactTracer.exit();
       return;
     }
     case HostPortal: {
       // We have no life-cycles associated with portals.
+      ReactTracer.exit();
       return;
     }
     case Profiler: {
@@ -611,16 +660,19 @@ function commitLifeCycles(
           }
         }
       }
+      ReactTracer.exit();
       return;
     }
     case SuspenseComponent: {
       commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      ReactTracer.exit();
       return;
     }
     case SuspenseListComponent:
     case IncompleteClassComponent:
     case FundamentalComponent:
     case ScopeComponent:
+      ReactTracer.exit();
       return;
     default: {
       invariant(
@@ -684,6 +736,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
 }
 
 function commitAttachRef(finishedWork: Fiber) {
+  ReactTracer.enter('commitAttachRef');
+
   const ref = finishedWork.ref;
   if (ref !== null) {
     const instance = finishedWork.stateNode;
@@ -717,9 +771,13 @@ function commitAttachRef(finishedWork: Fiber) {
       ref.current = instanceToUse;
     }
   }
+
+  ReactTracer.exit();
 }
 
 function commitDetachRef(current: Fiber) {
+  ReactTracer.enter('commitDetachRef');
+
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
@@ -728,6 +786,8 @@ function commitDetachRef(current: Fiber) {
       currentRef.current = null;
     }
   }
+
+  ReactTracer.exit();
 }
 
 // User-originating errors (lifecycles and refs) should not interrupt
