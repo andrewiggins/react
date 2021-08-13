@@ -297,6 +297,7 @@ function safelyAttachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
 }
 
 function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
+  ReactTracer.enter('safelyDetachRef');
   const ref = current.ref;
   const refCleanup = current.refCleanup;
 
@@ -353,6 +354,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
       ref.current = null;
     }
   }
+  ReactTracer.exit();
 }
 
 function safelyCallDestroy(
@@ -374,6 +376,7 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
 ): boolean {
+  ReactTracer.enter('commitBeforeMutationEffects');
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
 
   nextEffect = firstChild;
@@ -384,6 +387,7 @@ export function commitBeforeMutationEffects(
   shouldFireAfterActiveInstanceBlur = false;
   focusedInstanceHandle = null;
 
+  ReactTracer.exit();
   return shouldFire;
 }
 
@@ -512,6 +516,10 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
               }
             }
           }
+          ReactTracer.log(
+            'getSnapshotBeforeUpdate',
+            getComponentNameFromFiber(finishedWork),
+          );
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -848,6 +856,10 @@ function commitClassLayoutLifecycles(
         }
       }
     }
+    ReactTracer.log(
+      'componentDidMount',
+      getComponentNameFromFiber(finishedWork),
+    );
     if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
@@ -899,6 +911,10 @@ function commitClassLayoutLifecycles(
         }
       }
     }
+    ReactTracer.log(
+      'componentDidUpdate',
+      getComponentNameFromFiber(finishedWork),
+    );
     if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
@@ -1051,6 +1067,11 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
+  // ReactTracer note: We can't wrap this method cuz it recursively calls itself
+  // in `recursivelyTraverseMutationEffects` and not all Fibers that it is
+  // invoked with do any actual work. So we should instrument the methods this
+  // method calls that do actual work.
+
   // When updating this function, also update reappearLayoutEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible.
   const flags = finishedWork.flags;
@@ -1598,6 +1619,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
 }
 
 function commitAttachRef(finishedWork: Fiber) {
+  ReactTracer.enter('commitAttachRef');
   const ref = finishedWork.ref;
   if (ref !== null) {
     const instance = finishedWork.stateNode;
@@ -1641,6 +1663,7 @@ function commitAttachRef(finishedWork: Fiber) {
       ref.current = instanceToUse;
     }
   }
+  ReactTracer.exit();
 }
 
 function detachFiberMutation(fiber: Fiber) {
@@ -1821,6 +1844,7 @@ function commitPlacement(finishedWork: Fiber): void {
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
 
+  ReactTracer.enter('commitPlacement');
   switch (parentFiber.tag) {
     case HostSingleton: {
       if (enableHostSingletons && supportsSingletons) {
@@ -1861,6 +1885,7 @@ function commitPlacement(finishedWork: Fiber): void {
           'in React. Please file an issue.',
       );
   }
+  ReactTracer.exit();
 }
 
 function insertOrAppendPlacementNodeIntoContainer(
@@ -1945,6 +1970,7 @@ function commitDeletionEffects(
   returnFiber: Fiber,
   deletedFiber: Fiber,
 ) {
+  ReactTracer.enter('commitDeletionEffects');
   if (supportsMutation) {
     // We only have the top Fiber that was deleted but we need to recurse down its
     // children to find all the terminal nodes.
@@ -2002,6 +2028,7 @@ function commitDeletionEffects(
   }
 
   detachFiberMutation(deletedFiber);
+  ReactTracer.exit();
 }
 
 function recursivelyTraverseDeletionEffects(
@@ -2494,6 +2521,7 @@ export function commitMutationEffects(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ) {
+  ReactTracer.enter('commitMutationEffects');
   inProgressLanes = committedLanes;
   inProgressRoot = root;
 
@@ -2503,6 +2531,7 @@ export function commitMutationEffects(
 
   inProgressLanes = null;
   inProgressRoot = null;
+  ReactTracer.exit();
 }
 
 function recursivelyTraverseMutationEffects(
@@ -2543,6 +2572,11 @@ function commitMutationEffectsOnFiber(
   root: FiberRoot,
   lanes: Lanes,
 ) {
+  // ReactTracer note: We can't wrap this method cuz it recursively calls itself
+  // in `recursivelyTraverseMutationEffects` and not all Fibers that it is
+  // invoked with do any actual work. So we should instrument the methods this
+  // method calls that do actual work.
+
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -3113,6 +3147,7 @@ export function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ): void {
+  ReactTracer.enter('commitLayoutEffects');
   inProgressLanes = committedLanes;
   inProgressRoot = root;
 
@@ -3121,6 +3156,7 @@ export function commitLayoutEffects(
 
   inProgressLanes = null;
   inProgressRoot = null;
+  ReactTracer.exit();
 }
 
 function recursivelyTraverseLayoutEffects(
@@ -3233,6 +3269,10 @@ export function reappearLayoutEffects(
   // node was reused.
   includeWorkInProgressEffects: boolean,
 ) {
+  ReactTracer.enter(
+    'reappearLayoutEffects',
+    getComponentNameFromFiber(finishedWork),
+  );
   // Turn on layout effects in a tree that previously disappeared.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -3258,6 +3298,10 @@ export function reappearLayoutEffects(
       // TODO: Check for LayoutStatic flag
       const instance = finishedWork.stateNode;
       if (typeof instance.componentDidMount === 'function') {
+        ReactTracer.log(
+          'componentDidMount',
+          getComponentNameFromFiber(finishedWork),
+        );
         try {
           instance.componentDidMount();
         } catch (error) {
@@ -3360,6 +3404,7 @@ export function reappearLayoutEffects(
       break;
     }
   }
+  ReactTracer.exit();
 }
 
 function recursivelyTraverseReappearLayoutEffects(
@@ -4573,6 +4618,10 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
       case ClassComponent: {
         const instance = fiber.stateNode;
         if (typeof instance.componentDidMount === 'function') {
+          ReactTracer.log(
+            'componentDidMount',
+            getComponentNameFromFiber(fiber),
+          );
           try {
             instance.componentDidMount();
           } catch (error) {

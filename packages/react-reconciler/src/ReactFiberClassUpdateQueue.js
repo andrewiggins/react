@@ -723,6 +723,7 @@ export function commitCallbacks<State>(
   updateQueue: UpdateQueue<State>,
   context: any,
 ): void {
+  ReactTracer.log('commitCallbacks', context);
   const callbacks = updateQueue.callbacks;
   if (callbacks !== null) {
     updateQueue.callbacks = null;

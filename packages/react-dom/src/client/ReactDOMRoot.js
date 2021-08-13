@@ -102,6 +102,7 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
   // $FlowFixMe[missing-this-annot]
   function (children: ReactNodeList): void {
+    ReactTracer.enter('ReactDOMRoot.render');
     const root = this._internalRoot;
     if (root === null) {
       throw new Error('Cannot update an unmounted root.');
@@ -146,6 +147,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
       }
     }
     updateContainer(children, root, null, null);
+    ReactTracer.exit();
   };
 
 // $FlowFixMe[prop-missing] found when upgrading Flow

@@ -196,6 +196,7 @@ const classComponentUpdater = {
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueSetState', `${lane}`);
 
     const update = createUpdate(lane);
     update.payload = payload;
@@ -224,10 +225,12 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
   enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueReplaceState', `${lane}`);
 
     const update = createUpdate(lane);
     update.tag = ReplaceState;
@@ -258,11 +261,13 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
   // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueForceUpdate', `${lane}`);
 
     const update = createUpdate(lane);
     update.tag = ForceUpdate;
@@ -292,6 +297,7 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markForceUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
 };
 

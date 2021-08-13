@@ -26,7 +26,8 @@ export default function invokeGuardedCallbackImpl<Args: Array<mixed>, Context>(
   func: (...Args) => mixed,
   context: Context,
 ): void {
-  if (__DEV__) {
+  // Disable the dev complexity in invokeGuardedCallbackDev
+  if (false) {
     // In DEV mode, we use a special version
     // that plays more nicely with the browser's DevTools. The idea is to preserve
     // "Pause on exceptions" behavior. Because React wraps all user-provided
