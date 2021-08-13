@@ -72,6 +72,7 @@ function ReactDOMRoot(internalRoot) {
 }
 
 ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
+  ReactTracer.enter('ReactDOMRoot.render');
   const root = this._internalRoot;
   if (__DEV__) {
     if (typeof arguments[1] === 'function') {
@@ -97,6 +98,7 @@ ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
     }
   }
   updateContainer(children, root, null, null);
+  ReactTracer.exit();
 };
 
 ReactDOMRoot.prototype.unmount = function(): void {

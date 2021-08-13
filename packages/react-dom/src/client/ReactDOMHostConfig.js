@@ -301,6 +301,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // ReactTracer.log('appendInitialChild', parentInstance, child);
   parentInstance.appendChild(child);
 }
 
@@ -323,6 +324,7 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Array<mixed> {
+  ReactTracer.enter('prepareUpdate');
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     if (
@@ -338,13 +340,19 @@ export function prepareUpdate(
       validateDOMNesting(null, string, ownAncestorInfo);
     }
   }
-  return diffProperties(
+
+  var updatePayload = diffProperties(
     domElement,
     type,
     oldProps,
     newProps,
     rootContainerInstance,
   );
+
+  ReactTracer.log('updatePayload:', updatePayload);
+  ReactTracer.exit();
+
+  return updatePayload;
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {
@@ -427,6 +435,7 @@ export function commitMount(
   newProps: Props,
   internalInstanceHandle: Object,
 ): void {
+  ReactTracer.log('commitMount', domElement, type);
   // Despite the naming that might imply otherwise, this method only
   // fires if there is an `Update` effect scheduled during mounting.
   // This happens if `finalizeInitialChildren` returns `true` (which it
@@ -450,6 +459,7 @@ export function commitUpdate(
   newProps: Props,
   internalInstanceHandle: Object,
 ): void {
+  ReactTracer.log('commitUpdate', domElement, updatePayload);
   // Update the props handle so that we know which props are the ones with
   // with current event handlers.
   updateFiberProps(domElement, newProps);
@@ -458,6 +468,7 @@ export function commitUpdate(
 }
 
 export function resetTextContent(domElement: Instance): void {
+  ReactTracer.log('resetTextContent', domElement);
   setTextContent(domElement, '');
 }
 
@@ -466,6 +477,7 @@ export function commitTextUpdate(
   oldText: string,
   newText: string,
 ): void {
+  ReactTracer.log('commitTextUpdate', textInstance, newText);
   textInstance.nodeValue = newText;
 }
 
@@ -473,6 +485,7 @@ export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  ReactTracer.log('appendChild', parentInstance, child);
   parentInstance.appendChild(child);
 }
 
@@ -480,6 +493,7 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
+  ReactTracer.log('appendChildToContainer', container, child);
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
@@ -511,6 +525,7 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
+  ReactTracer.log('insertBefore', child, beforeChild);
   parentInstance.insertBefore(child, beforeChild);
 }
 
@@ -519,6 +534,7 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
+  ReactTracer.log('insertInContainerBefore', child, beforeChild);
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);
   } else {
@@ -562,6 +578,7 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
+  ReactTracer.log('removeChild', parentInstance, child);
   parentInstance.removeChild(child);
 }
 
@@ -569,6 +586,7 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
+  ReactTracer.log('removeChildFromContainer', container, child);
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {

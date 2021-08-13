@@ -294,6 +294,7 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
 ) {
+  ReactTracer.enter('commitBeforeMutationEffects');
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
 
   nextEffect = firstChild;
@@ -304,6 +305,7 @@ export function commitBeforeMutationEffects(
   shouldFireAfterActiveInstanceBlur = false;
   focusedInstanceHandle = null;
 
+  ReactTracer.exit();
   return shouldFire;
 }
 
@@ -423,6 +425,10 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
               }
             }
           }
+          ReactTracer.log(
+            'getSnapshotBeforeUpdate',
+            getComponentNameFromFiber(finishedWork),
+          );
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -615,6 +621,7 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
+  ReactTracer.enter('commitLayoutEffectOnFiber', getComponentNameFromFiber(finishedWork));
   if ((finishedWork.flags & LayoutMask) !== NoFlags) {
     switch (finishedWork.tag) {
       case FunctionComponent:
@@ -683,6 +690,10 @@ function commitLayoutEffectOnFiber(
                   }
                 }
               }
+              ReactTracer.log(
+                'componentDidMount',
+                getComponentNameFromFiber(finishedWork),
+              );
               if (
                 enableProfilerTimer &&
                 enableProfilerCommitHooks &&
@@ -736,6 +747,10 @@ function commitLayoutEffectOnFiber(
                   }
                 }
               }
+              ReactTracer.log(
+                'componentDidUpdate',
+                getComponentNameFromFiber(finishedWork),
+              );
               if (
                 enableProfilerTimer &&
                 enableProfilerCommitHooks &&
@@ -798,6 +813,10 @@ function commitLayoutEffectOnFiber(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
+          ReactTracer.log(
+            'commitUpdateQueue',
+            getComponentNameFromFiber(finishedWork),
+          );
           commitUpdateQueue(finishedWork, updateQueue, instance);
         }
         break;
@@ -820,6 +839,10 @@ function commitLayoutEffectOnFiber(
                 break;
             }
           }
+          ReactTracer.log(
+            'commitUpdateQueue',
+            getComponentNameFromFiber(finishedWork),
+          );
           commitUpdateQueue(finishedWork, updateQueue, instance);
         }
         break;
@@ -939,6 +962,8 @@ function commitLayoutEffectOnFiber(
       }
     }
   }
+
+  ReactTracer.exit();
 }
 
 function reappearLayoutEffectsOnFiber(node: Fiber) {
@@ -977,6 +1002,7 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
       break;
     }
   }
+  ReactTracer.exit();
 }
 
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
@@ -1048,6 +1074,7 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
 }
 
 function commitAttachRef(finishedWork: Fiber) {
+  ReactTracer.enter('commitAttachRef');
   const ref = finishedWork.ref;
   if (ref !== null) {
     const instance = finishedWork.stateNode;
@@ -1092,9 +1119,11 @@ function commitAttachRef(finishedWork: Fiber) {
       ref.current = instanceToUse;
     }
   }
+  ReactTracer.exit();
 }
 
 function commitDetachRef(current: Fiber) {
+  ReactTracer.enter('commitDetachRef');
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
@@ -1116,6 +1145,7 @@ function commitDetachRef(current: Fiber) {
       currentRef.current = null;
     }
   }
+  ReactTracer.exit();
 }
 
 // User-originating errors (lifecycles and refs) should not interrupt
@@ -1709,6 +1739,7 @@ function commitDeletion(
   current: Fiber,
   nearestMountedAncestor: Fiber,
 ): void {
+  ReactTracer.enter('commitDeletion');
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
@@ -1719,6 +1750,7 @@ function commitDeletion(
   }
 
   detachFiberMutation(current);
+  ReactTracer.exit();
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
@@ -2030,6 +2062,7 @@ export function commitMutationEffects(
   firstChild: Fiber,
   committedLanes: Lanes,
 ) {
+  ReactTracer.enter('commitMutationEffects');
   inProgressLanes = committedLanes;
   inProgressRoot = root;
   nextEffect = firstChild;
@@ -2038,6 +2071,7 @@ export function commitMutationEffects(
 
   inProgressLanes = null;
   inProgressRoot = null;
+  ReactTracer.exit();
 }
 
 function commitMutationEffects_begin(root: FiberRoot) {
@@ -2175,7 +2209,9 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
   const primaryFlags = flags & (Placement | Update | Hydrating);
   outer: switch (primaryFlags) {
     case Placement: {
+      ReactTracer.enter('commitPlacement');
       commitPlacement(finishedWork);
+      ReactTracer.exit();
       // Clear the "placement" from effect tag so that we know that this is
       // inserted, before any life-cycles like componentDidMount gets called.
       // TODO: findDOMNode doesn't rely on this any more but isMounted does
@@ -2185,14 +2221,18 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
     }
     case PlacementAndUpdate: {
       // Placement
+      ReactTracer.enter('commitPlacement');
       commitPlacement(finishedWork);
+      ReactTracer.exit();
       // Clear the "placement" from effect tag so that we know that this is
       // inserted, before any life-cycles like componentDidMount gets called.
       finishedWork.flags &= ~Placement;
 
       // Update
       const current = finishedWork.alternate;
+      ReactTracer.enter('commitWork');
       commitWork(current, finishedWork);
+      ReactTracer.exit();
       break;
     }
     case Hydrating: {
@@ -2204,12 +2244,16 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
 
       // Update
       const current = finishedWork.alternate;
+      ReactTracer.enter('commitWork');
       commitWork(current, finishedWork);
+      ReactTracer.exit();
       break;
     }
     case Update: {
       const current = finishedWork.alternate;
+      ReactTracer.enter('commitWork');
       commitWork(current, finishedWork);
+      ReactTracer.exit();
       break;
     }
   }
@@ -2220,6 +2264,7 @@ export function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ): void {
+  ReactTracer.enter('commitLayoutEffects');
   inProgressLanes = committedLanes;
   inProgressRoot = root;
   nextEffect = finishedWork;
@@ -2228,6 +2273,7 @@ export function commitLayoutEffects(
 
   inProgressLanes = null;
   inProgressRoot = null;
+  ReactTracer.exit();
 }
 
 function commitLayoutEffects_begin(
