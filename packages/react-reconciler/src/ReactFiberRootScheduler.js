@@ -85,6 +85,7 @@ let isFlushingWork: boolean = false;
 let currentEventTransitionLane: Lane = NoLane;
 
 export function ensureRootIsScheduled(root: FiberRoot): void {
+  ReactTracer.enter('ensureRootIsScheduled');
   // This function is called whenever a root receives an update. It does two
   // things 1) it ensures the root is in the root schedule, and 2) it ensures
   // there's a pending microtask to process the root schedule.
@@ -129,6 +130,9 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
     // instead of waiting a microtask.
     // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
     // unblock additional features we have planned.
+    ReactTracer.log(
+      'enableDeferRootSchedulingToMicrotask is false. Scheduling task immediately',
+    );
     scheduleTaskForRootDuringMicrotask(root, now());
   }
 
@@ -141,6 +145,7 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
     // Special `act` case: Record whenever a legacy update is scheduled.
     ReactCurrentActQueue.didScheduleLegacyUpdate = true;
   }
+  ReactTracer.exit();
 }
 
 export function flushSyncWorkOnAllRoots() {
@@ -311,6 +316,11 @@ function scheduleTaskForRootDuringMicrotask(
     return NoLane;
   }
 
+  ReactTracer.enter(
+    'scheduleTaskForRootDuringMicrotask',
+    `${nextLanes} (${currentTime})`,
+  );
+
   // Schedule a new callback in the host environment.
   if (includesSyncLane(nextLanes)) {
     // Synchronous work is always flushed at the end of the microtask, so we
@@ -320,6 +330,8 @@ function scheduleTaskForRootDuringMicrotask(
     }
     root.callbackPriority = SyncLane;
     root.callbackNode = null;
+    ReactTracer.log('Contains sync work. No need to schedule a task.');
+    ReactTracer.exit();
     return SyncLane;
   } else {
     // We use the highest priority lane to represent the priority of the callback.
@@ -338,6 +350,8 @@ function scheduleTaskForRootDuringMicrotask(
       )
     ) {
       // The priority hasn't changed. We can reuse the existing task.
+      ReactTracer.log('Reusing existing task');
+      ReactTracer.exit();
       return newCallbackPriority;
     } else {
       // Cancel the existing callback. We'll schedule a new one below.
@@ -370,6 +384,7 @@ function scheduleTaskForRootDuringMicrotask(
 
     root.callbackPriority = newCallbackPriority;
     root.callbackNode = newCallbackNode;
+    ReactTracer.exit();
     return newCallbackPriority;
   }
 }

@@ -367,6 +367,7 @@ export function updateContainer(
   const current = container.current;
   const lane = requestUpdateLane(current);
 
+  ReactTracer.enter('updateContainer', `${lane}`);
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
   }
@@ -420,6 +421,7 @@ export function updateContainer(
     entangleTransitions(root, current, lane);
   }
 
+  ReactTracer.exit();
   return lane;
 }
 
