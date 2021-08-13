@@ -68,51 +68,53 @@ function ReactDOMBlockingRoot(
   this._internalRoot = createRootImpl(container, tag, options);
 }
 
-ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
-  children: ReactNodeList,
-): void {
-  const root = this._internalRoot;
-  if (__DEV__) {
-    if (typeof arguments[1] === 'function') {
-      console.error(
-        'render(...): does not support the second callback argument. ' +
-          'To execute a side effect after rendering, declare it in a component body with useEffect().',
-      );
-    }
-    const container = root.containerInfo;
+ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render =
+  function (children: ReactNodeList): void {
+    ReactTracer.enter('ReactDOMRoot.render');
+    const root = this._internalRoot;
+    if (__DEV__) {
+      if (typeof arguments[1] === 'function') {
+        console.error(
+          'render(...): does not support the second callback argument. ' +
+            'To execute a side effect after rendering, declare it in a component body with useEffect().',
+        );
+      }
+      const container = root.containerInfo;
 
-    if (container.nodeType !== COMMENT_NODE) {
-      const hostInstance = findHostInstanceWithNoPortals(root.current);
-      if (hostInstance) {
-        if (hostInstance.parentNode !== container) {
-          console.error(
-            'render(...): It looks like the React-rendered content of the ' +
-              'root container was removed without using React. This is not ' +
-              'supported and will cause errors. Instead, call ' +
-              "root.unmount() to empty a root's container.",
-          );
+      if (container.nodeType !== COMMENT_NODE) {
+        const hostInstance = findHostInstanceWithNoPortals(root.current);
+        if (hostInstance) {
+          if (hostInstance.parentNode !== container) {
+            console.error(
+              'render(...): It looks like the React-rendered content of the ' +
+                'root container was removed without using React. This is not ' +
+                'supported and will cause errors. Instead, call ' +
+                "root.unmount() to empty a root's container.",
+            );
+          }
         }
       }
     }
-  }
-  updateContainer(children, root, null, null);
-};
+    updateContainer(children, root, null, null);
+    ReactTracer.exit();
+  };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
-  if (__DEV__) {
-    if (typeof arguments[0] === 'function') {
-      console.error(
-        'unmount(...): does not support a callback argument. ' +
-          'To execute a side effect after rendering, declare it in a component body with useEffect().',
-      );
+ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount =
+  function (): void {
+    if (__DEV__) {
+      if (typeof arguments[0] === 'function') {
+        console.error(
+          'unmount(...): does not support a callback argument. ' +
+            'To execute a side effect after rendering, declare it in a component body with useEffect().',
+        );
+      }
     }
-  }
-  const root = this._internalRoot;
-  const container = root.containerInfo;
-  updateContainer(null, root, null, () => {
-    unmarkContainerAsRoot(container);
-  });
-};
+    const root = this._internalRoot;
+    const container = root.containerInfo;
+    updateContainer(null, root, null, () => {
+      unmarkContainerAsRoot(container);
+    });
+  };
 
 function createRootImpl(
   container: Container,

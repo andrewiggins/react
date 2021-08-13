@@ -313,6 +313,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   var expirationTime = startTime + timeout;
 
+  ReactTracer.enter('scheduleCallback', expirationTime);
   var newTask = {
     id: taskIdCounter++,
     callback,
@@ -355,6 +356,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     }
   }
 
+  ReactTracer.exit();
   return newTask;
 }
 

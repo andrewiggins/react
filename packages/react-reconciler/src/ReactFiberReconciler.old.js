@@ -267,6 +267,7 @@ export function updateContainer(
   }
   const lane = requestUpdateLane(current);
 
+  ReactTracer.enter('updateContainer', `${lane} (${eventTime})`);
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
   }
@@ -317,6 +318,7 @@ export function updateContainer(
   enqueueUpdate(current, update);
   scheduleUpdateOnFiber(current, lane, eventTime);
 
+  ReactTracer.exit();
   return lane;
 }
 

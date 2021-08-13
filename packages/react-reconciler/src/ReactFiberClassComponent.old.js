@@ -196,6 +196,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueSetState', `${lane} (${eventTime})`);
 
     const update = createUpdate(eventTime, lane);
     update.payload = payload;
@@ -221,11 +222,13 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueReplaceState', `${lane} (${eventTime})`);
 
     const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
@@ -253,11 +256,13 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    ReactTracer.enter('enqueueForceUpdate', `${lane} (${eventTime})`);
 
     const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
@@ -284,6 +289,7 @@ const classComponentUpdater = {
     if (enableSchedulingProfiler) {
       markForceUpdateScheduled(fiber, lane);
     }
+    ReactTracer.exit();
   },
 };
 

@@ -602,9 +602,8 @@ function updateOffscreenComponent(
       if (enableSchedulerTracing) {
         markSpawnedWork((OffscreenLane: Lane));
       }
-      workInProgress.lanes = workInProgress.childLanes = laneToLanes(
-        OffscreenLane,
-      );
+      workInProgress.lanes = workInProgress.childLanes =
+        laneToLanes(OffscreenLane);
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
       };
@@ -1197,9 +1196,8 @@ function mountLazyComponent(
     case FunctionComponent: {
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
-        workInProgress.type = Component = resolveFunctionForHotReloading(
-          Component,
-        );
+        workInProgress.type = Component =
+          resolveFunctionForHotReloading(Component);
       }
       child = updateFunctionComponent(
         null,
@@ -1212,9 +1210,8 @@ function mountLazyComponent(
     }
     case ClassComponent: {
       if (__DEV__) {
-        workInProgress.type = Component = resolveClassForHotReloading(
-          Component,
-        );
+        workInProgress.type = Component =
+          resolveClassForHotReloading(Component);
       }
       child = updateClassComponent(
         null,
@@ -1227,9 +1224,8 @@ function mountLazyComponent(
     }
     case ForwardRef: {
       if (__DEV__) {
-        workInProgress.type = Component = resolveForwardRefForHotReloading(
-          Component,
-        );
+        workInProgress.type = Component =
+          resolveForwardRefForHotReloading(Component);
       }
       child = updateForwardRef(
         null,
@@ -1801,9 +1797,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
-      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-        renderLanes,
-      );
+      primaryChildFragment.memoizedState =
+        mountSuspenseOffscreenState(renderLanes);
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
     } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
@@ -1817,9 +1812,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
-      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-        renderLanes,
-      );
+      primaryChildFragment.memoizedState =
+        mountSuspenseOffscreenState(renderLanes);
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
       // Since nothing actually suspended, there will nothing to ping this to
@@ -1878,17 +1872,17 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             // Therefore we now have to render the fallback.
             const nextPrimaryChildren = nextProps.children;
             const nextFallbackChildren = nextProps.fallback;
-            const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
-              current,
-              workInProgress,
-              nextPrimaryChildren,
-              nextFallbackChildren,
-              renderLanes,
-            );
+            const fallbackChildFragment =
+              mountSuspenseFallbackAfterRetryWithoutHydrating(
+                current,
+                workInProgress,
+                nextPrimaryChildren,
+                nextFallbackChildren,
+                renderLanes,
+              );
             const primaryChildFragment: Fiber = (workInProgress.child: any);
-            primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-              renderLanes,
-            );
+            primaryChildFragment.memoizedState =
+              mountSuspenseOffscreenState(renderLanes);
             workInProgress.memoizedState = SUSPENDED_MARKER;
             return fallbackChildFragment;
           }
@@ -2092,7 +2086,8 @@ function updateSuspensePrimaryChildren(
     // Delete the fallback child fragment
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.flags = Deletion;
-    workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
+    workInProgress.firstEffect = workInProgress.lastEffect =
+      currentFallbackChildFragment;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3085,6 +3080,7 @@ function beginWork(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ): Fiber | null {
+  ReactTracer.log('beginWork', '-', getComponentNameFromFiber(workInProgress));
   const updateLanes = workInProgress.lanes;
 
   if (__DEV__) {

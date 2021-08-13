@@ -218,11 +218,13 @@ function commitBeforeMutationLifeCycles(
   current: Fiber | null,
   finishedWork: Fiber,
 ): void {
+  ReactTracer.enter('commitBeforeMutationLifeCycles');
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent:
     case Block: {
+      ReactTracer.exit();
       return;
     }
     case ClassComponent: {
@@ -261,6 +263,10 @@ function commitBeforeMutationLifeCycles(
               }
             }
           }
+          ReactTracer.log(
+            'getSnapshotBeforeUpdate',
+            getComponentNameFromFiber(finishedWork),
+          );
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -281,6 +287,7 @@ function commitBeforeMutationLifeCycles(
           instance.__reactInternalSnapshotBeforeUpdate = snapshot;
         }
       }
+      ReactTracer.exit();
       return;
     }
     case HostRoot: {
@@ -290,6 +297,7 @@ function commitBeforeMutationLifeCycles(
           clearContainer(root.containerInfo);
         }
       }
+      ReactTracer.exit();
       return;
     }
     case HostComponent:
@@ -297,8 +305,10 @@ function commitBeforeMutationLifeCycles(
     case HostPortal:
     case IncompleteClassComponent:
       // Nothing to do for these component types
+      ReactTracer.exit();
       return;
   }
+  ReactTracer.exit();
   invariant(
     false,
     'This unit of work tag should not have side-effects. This error is ' +
@@ -457,6 +467,7 @@ function commitLifeCycles(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
+  ReactTracer.enter('commitLifeCycles', getComponentName(finishedWork.type));
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -482,6 +493,7 @@ function commitLifeCycles(
       }
 
       schedulePassiveEffects(finishedWork);
+      ReactTracer.exit();
       return;
     }
     case ClassComponent: {
@@ -518,6 +530,10 @@ function commitLifeCycles(
               }
             }
           }
+          ReactTracer.log(
+            'componentDidMount',
+            getComponentName(finishedWork.type),
+          );
           if (
             enableProfilerTimer &&
             enableProfilerCommitHooks &&
@@ -568,6 +584,10 @@ function commitLifeCycles(
               }
             }
           }
+          ReactTracer.log(
+            'componentDidUpdate',
+            getComponentName(finishedWork.type),
+          );
           if (
             enableProfilerTimer &&
             enableProfilerCommitHooks &&
@@ -629,8 +649,13 @@ function commitLifeCycles(
         // We could update instance props and state here,
         // but instead we rely on them being set during last render.
         // TODO: revisit this when we implement resuming.
+        ReactTracer.log(
+          'commitUpdateQueue',
+          getComponentName(finishedWork.type),
+        );
         commitUpdateQueue(finishedWork, updateQueue, instance);
       }
+      ReactTracer.exit();
       return;
     }
     case HostRoot: {
@@ -653,6 +678,7 @@ function commitLifeCycles(
         }
         commitUpdateQueue(finishedWork, updateQueue, instance);
       }
+      ReactTracer.exit();
       return;
     }
     case HostComponent: {
@@ -668,14 +694,17 @@ function commitLifeCycles(
         commitMount(instance, type, props, finishedWork);
       }
 
+      ReactTracer.exit();
       return;
     }
     case HostText: {
       // We have no life-cycles associated with text.
+      ReactTracer.exit();
       return;
     }
     case HostPortal: {
       // We have no life-cycles associated with portals.
+      ReactTracer.exit();
       return;
     }
     case Profiler: {
@@ -746,10 +775,12 @@ function commitLifeCycles(
           }
         }
       }
+      ReactTracer.exit();
       return;
     }
     case SuspenseComponent: {
       commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      ReactTracer.exit();
       return;
     }
     case SuspenseListComponent:
@@ -758,8 +789,10 @@ function commitLifeCycles(
     case ScopeComponent:
     case OffscreenComponent:
     case LegacyHiddenComponent:
+      ReactTracer.exit();
       return;
   }
+  ReactTracer.exit();
   invariant(
     false,
     'This unit of work tag should not have side-effects. This error is ' +
@@ -816,6 +849,7 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
 }
 
 function commitAttachRef(finishedWork: Fiber) {
+  ReactTracer.enter('commitAttachRef');
   const ref = finishedWork.ref;
   if (ref !== null) {
     const instance = finishedWork.stateNode;
@@ -847,9 +881,11 @@ function commitAttachRef(finishedWork: Fiber) {
       ref.current = instanceToUse;
     }
   }
+  ReactTracer.exit();
 }
 
 function commitDetachRef(current: Fiber) {
+  ReactTracer.enter('commitDetachRef');
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
@@ -858,6 +894,7 @@ function commitDetachRef(current: Fiber) {
       currentRef.current = null;
     }
   }
+  ReactTracer.exit();
 }
 
 // User-originating errors (lifecycles and refs) should not interrupt
@@ -1149,7 +1186,7 @@ function commitPlacement(finishedWork: Fiber): void {
   if (!supportsMutation) {
     return;
   }
-
+  ReactTracer.enter('commitPlacement');
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
 
@@ -1198,6 +1235,7 @@ function commitPlacement(finishedWork: Fiber): void {
   } else {
     insertOrAppendPlacementNode(finishedWork, before, parent);
   }
+  ReactTracer.exit();
 }
 
 function insertOrAppendPlacementNodeIntoContainer(
@@ -1415,6 +1453,7 @@ function commitDeletion(
   current: Fiber,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
+  ReactTracer.enter('commitDeletion');
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
@@ -1428,9 +1467,11 @@ function commitDeletion(
   if (alternate !== null) {
     detachFiberMutation(alternate);
   }
+  ReactTracer.exit();
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
+  ReactTracer.enter('commitWork');
   if (!supportsMutation) {
     switch (finishedWork.tag) {
       case FunctionComponent:
@@ -1520,9 +1561,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       } else {
         commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
       }
+      ReactTracer.exit();
       return;
     }
     case ClassComponent: {
+      ReactTracer.exit();
       return;
     }
     case HostComponent: {
@@ -1549,6 +1592,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           );
         }
       }
+      ReactTracer.exit();
       return;
     }
     case HostText: {
@@ -1565,6 +1609,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const oldText: string =
         current !== null ? current.memoizedProps : newText;
       commitTextUpdate(textInstance, oldText, newText);
+      ReactTracer.exit();
       return;
     }
     case HostRoot: {
@@ -1576,27 +1621,33 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           commitHydratedContainer(root.containerInfo);
         }
       }
+      ReactTracer.exit();
       return;
     }
     case Profiler: {
+      ReactTracer.exit();
       return;
     }
     case SuspenseComponent: {
       commitSuspenseComponent(finishedWork);
       attachSuspenseRetryListeners(finishedWork);
+      ReactTracer.exit();
       return;
     }
     case SuspenseListComponent: {
       attachSuspenseRetryListeners(finishedWork);
+      ReactTracer.exit();
       return;
     }
     case IncompleteClassComponent: {
+      ReactTracer.exit();
       return;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
         updateFundamentalComponent(fundamentalInstance);
+        ReactTracer.exit();
         return;
       }
       break;
@@ -1605,6 +1656,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
         prepareScopeUpdate(scopeInstance, finishedWork);
+        ReactTracer.exit();
         return;
       }
       break;
@@ -1614,9 +1666,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const newState: OffscreenState | null = finishedWork.memoizedState;
       const isHidden = newState !== null;
       hideOrUnhideAllChildren(finishedWork, isHidden);
+      ReactTracer.exit();
       return;
     }
   }
+  ReactTracer.exit();
   invariant(
     false,
     'This unit of work tag should not have side-effects. This error is ' +
