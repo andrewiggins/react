@@ -3669,13 +3669,16 @@ function bailoutOnAlreadyFinishedWork(
       // the children.
       lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
       if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
+        ReactTracer.log('No pending work in subtree. Skipping all children');
         return null;
       }
     } else {
+      ReactTracer.log('No pending work in subtree. Skipping all children');
       return null;
     }
   }
 
+  ReactTracer.log('Children have pending work. Continuing down the tree.');
   // This fiber doesn't have work, but its subtree does. Clone the child
   // fibers and continue.
   cloneChildFibers(current, workInProgress);
@@ -4034,6 +4037,7 @@ function beginWork(
         // may not be work scheduled on `current`, so we check for this flag.
         (workInProgress.flags & DidCapture) === NoFlags
       ) {
+        ReactTracer.log('No pending updates or context on this Fiber');
         // No pending updates or context. Bail out now.
         didReceiveUpdate = false;
         return attemptEarlyBailoutIfNoScheduledUpdate(
