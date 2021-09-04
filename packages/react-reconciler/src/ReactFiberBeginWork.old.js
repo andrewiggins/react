@@ -602,8 +602,9 @@ function updateOffscreenComponent(
       if (enableSchedulerTracing) {
         markSpawnedWork((OffscreenLane: Lane));
       }
-      workInProgress.lanes = workInProgress.childLanes =
-        laneToLanes(OffscreenLane);
+      workInProgress.lanes = workInProgress.childLanes = laneToLanes(
+        OffscreenLane,
+      );
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
       };
@@ -1196,8 +1197,9 @@ function mountLazyComponent(
     case FunctionComponent: {
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
-        workInProgress.type = Component =
-          resolveFunctionForHotReloading(Component);
+        workInProgress.type = Component = resolveFunctionForHotReloading(
+          Component,
+        );
       }
       child = updateFunctionComponent(
         null,
@@ -1210,8 +1212,9 @@ function mountLazyComponent(
     }
     case ClassComponent: {
       if (__DEV__) {
-        workInProgress.type = Component =
-          resolveClassForHotReloading(Component);
+        workInProgress.type = Component = resolveClassForHotReloading(
+          Component,
+        );
       }
       child = updateClassComponent(
         null,
@@ -1224,8 +1227,9 @@ function mountLazyComponent(
     }
     case ForwardRef: {
       if (__DEV__) {
-        workInProgress.type = Component =
-          resolveForwardRefForHotReloading(Component);
+        workInProgress.type = Component = resolveForwardRefForHotReloading(
+          Component,
+        );
       }
       child = updateForwardRef(
         null,
@@ -1797,8 +1801,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
-      primaryChildFragment.memoizedState =
-        mountSuspenseOffscreenState(renderLanes);
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes,
+      );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
     } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
@@ -1812,8 +1817,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
-      primaryChildFragment.memoizedState =
-        mountSuspenseOffscreenState(renderLanes);
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes,
+      );
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
       // Since nothing actually suspended, there will nothing to ping this to
@@ -1872,17 +1878,17 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             // Therefore we now have to render the fallback.
             const nextPrimaryChildren = nextProps.children;
             const nextFallbackChildren = nextProps.fallback;
-            const fallbackChildFragment =
-              mountSuspenseFallbackAfterRetryWithoutHydrating(
-                current,
-                workInProgress,
-                nextPrimaryChildren,
-                nextFallbackChildren,
-                renderLanes,
-              );
+            const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
+              current,
+              workInProgress,
+              nextPrimaryChildren,
+              nextFallbackChildren,
+              renderLanes,
+            );
             const primaryChildFragment: Fiber = (workInProgress.child: any);
-            primaryChildFragment.memoizedState =
-              mountSuspenseOffscreenState(renderLanes);
+            primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+              renderLanes,
+            );
             workInProgress.memoizedState = SUSPENDED_MARKER;
             return fallbackChildFragment;
           }
@@ -2086,8 +2092,7 @@ function updateSuspensePrimaryChildren(
     // Delete the fallback child fragment
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.flags = Deletion;
-    workInProgress.firstEffect = workInProgress.lastEffect =
-      currentFallbackChildFragment;
+    workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3003,10 +3008,12 @@ function bailoutOnAlreadyFinishedWork(
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
+    ReactTracer.log('No pending work in subtree. Skipping all children');
     return null;
   } else {
     // This fiber doesn't have work, but its subtree does. Clone the child
     // fibers and continue.
+    ReactTracer.log('Children have pending work. Continuing down the tree.');
     cloneChildFibers(current, workInProgress);
     return workInProgress.child;
   }
@@ -3289,6 +3296,7 @@ function beginWork(
           return updateOffscreenComponent(current, workInProgress, renderLanes);
         }
       }
+      ReactTracer.log('No pending updates or context on this Fiber');
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
     } else {
       if ((current.flags & ForceUpdateForLegacySuspense) !== NoFlags) {
