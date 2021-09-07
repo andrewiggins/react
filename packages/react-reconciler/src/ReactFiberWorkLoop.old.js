@@ -1919,6 +1919,7 @@ function commitRoot(root) {
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
+  ReactTracer.enter('commitRoot', root.finishedLanes);
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1937,7 +1938,6 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
-  ReactTracer.enter('commitRoot', lanes);
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2470,6 +2470,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
 
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
+  ReactTracer.enter('flushPassiveEffects');
   if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
       pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
@@ -2485,11 +2486,16 @@ export function flushPassiveEffects(): boolean {
         return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
       } finally {
         setCurrentUpdateLanePriority(previousLanePriority);
+        ReactTracer.exit();
       }
     } else {
-      return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+      const result = runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+      ReactTracer.exit();
+      return result;
     }
   }
+  ReactTracer.log('No root with pending passive effects to flush');
+  ReactTracer.exit();
   return false;
 }
 

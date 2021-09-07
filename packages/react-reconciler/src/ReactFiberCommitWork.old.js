@@ -316,7 +316,20 @@ function commitBeforeMutationLifeCycles(
   );
 }
 
+function getHookFlagLabel(flags) {
+  return [
+    (flags & HookPassive) == HookPassive && 'Passive',
+    (flags & HookLayout) == HookLayout && 'Layout',
+  ]
+    .filter(Boolean)
+    .join(',');
+}
+
 function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
+  ReactTracer.log(
+    `commitHookEffectListUnmount (${getHookFlagLabel(tag)})`,
+    getComponentNameFromFiber(finishedWork),
+  );
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -337,6 +350,10 @@ function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
 }
 
 function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
+  ReactTracer.log(
+    `commitHookEffectListMount (${getHookFlagLabel(tag)})`,
+    getComponentNameFromFiber(finishedWork),
+  );
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -1186,7 +1203,7 @@ function commitPlacement(finishedWork: Fiber): void {
   if (!supportsMutation) {
     return;
   }
-  ReactTracer.enter('commitPlacement');
+  ReactTracer.enter('commitPlacement', getComponentNameFromFiber(finishedWork));
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
 
@@ -1471,7 +1488,7 @@ function commitDeletion(
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
-  ReactTracer.enter('commitWork');
+  ReactTracer.enter('commitWork', getComponentNameFromFiber(finishedWork));
   if (!supportsMutation) {
     switch (finishedWork.tag) {
       case FunctionComponent:
