@@ -2657,6 +2657,7 @@ function commitRootImpl(
   transitions: Array<Transition> | null,
   renderPriorityLevel: EventPriority,
 ) {
+  ReactTracer.enter('commitRoot', root.finishedLanes);
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -2674,7 +2675,6 @@ function commitRootImpl(
 
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
-  ReactTracer.enter('commitRoot', lanes);
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2766,13 +2766,17 @@ function commitRootImpl(
       // the previous render and commit if we throttle the commit
       // with setTimeout
       pendingPassiveTransitions = transitions;
+      ReactTracer.enter('Scheduling flushPassiveEffects');
       scheduleCallback(NormalSchedulerPriority, () => {
+        ReactTracer.enter('commitRoot scheduled callback');
         flushPassiveEffects();
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
+        ReactTracer.exit();
         return null;
       });
+      ReactTracer.exit();
     }
   }
 
@@ -3096,6 +3100,7 @@ export function flushPassiveEffects(): boolean {
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
+  ReactTracer.enter('flushPassiveEffects');
   if (rootWithPendingPassiveEffects !== null) {
     // Cache the root since rootWithPendingPassiveEffects is cleared in
     // flushPassiveEffectsImpl
@@ -3116,6 +3121,7 @@ export function flushPassiveEffects(): boolean {
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
+      ReactTracer.exit();
       setCurrentUpdatePriority(previousPriority);
       ReactCurrentBatchConfig.transition = prevTransition;
 
@@ -3125,6 +3131,8 @@ export function flushPassiveEffects(): boolean {
       releaseRootPooledCache(root, remainingLanes);
     }
   }
+  ReactTracer.log('No root with pending passive effects to flush');
+  ReactTracer.exit();
   return false;
 }
 
