@@ -489,11 +489,21 @@ function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
   }
 }
 
+function getHookFlagLabel(flags) {
+  return [
+    (flags & HookPassive) == HookPassive && 'Passive',
+    (flags & HookLayout) == HookLayout && 'Layout',
+  ]
+    .filter(Boolean)
+    .join(',');
+}
+
 function commitHookEffectListUnmount(
   flags: HookFlags,
   finishedWork: Fiber,
   nearestMountedAncestor: Fiber | null,
 ) {
+  ReactTracer.log(`commitHookEffectListUnmount (${getHookFlagLabel(flags)})`, getComponentNameFromFiber(finishedWork));
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -514,6 +524,7 @@ function commitHookEffectListUnmount(
 }
 
 function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
+  ReactTracer.log(`commitHookEffectListMount (${getHookFlagLabel(tag)})`,  getComponentNameFromFiber(finishedWork));
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -2209,7 +2220,7 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
   const primaryFlags = flags & (Placement | Update | Hydrating);
   outer: switch (primaryFlags) {
     case Placement: {
-      ReactTracer.enter('commitPlacement');
+      ReactTracer.enter('commitPlacement', getComponentNameFromFiber(finishedWork));
       commitPlacement(finishedWork);
       ReactTracer.exit();
       // Clear the "placement" from effect tag so that we know that this is
@@ -2221,7 +2232,7 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
     }
     case PlacementAndUpdate: {
       // Placement
-      ReactTracer.enter('commitPlacement');
+      ReactTracer.enter('commitPlacement', getComponentNameFromFiber(finishedWork));
       commitPlacement(finishedWork);
       ReactTracer.exit();
       // Clear the "placement" from effect tag so that we know that this is
@@ -2230,7 +2241,7 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
 
       // Update
       const current = finishedWork.alternate;
-      ReactTracer.enter('commitWork');
+      ReactTracer.enter('commitWork', getComponentNameFromFiber(finishedWork));
       commitWork(current, finishedWork);
       ReactTracer.exit();
       break;
@@ -2244,14 +2255,14 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
 
       // Update
       const current = finishedWork.alternate;
-      ReactTracer.enter('commitWork');
+      ReactTracer.enter('commitWork', getComponentNameFromFiber(finishedWork));
       commitWork(current, finishedWork);
       ReactTracer.exit();
       break;
     }
     case Update: {
       const current = finishedWork.alternate;
-      ReactTracer.enter('commitWork');
+      ReactTracer.enter('commitWork', getComponentNameFromFiber(finishedWork));
       commitWork(current, finishedWork);
       ReactTracer.exit();
       break;
