@@ -193,6 +193,7 @@ export function queueDiscreteEvent(
   if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
     return;
   }
+  ReactTracer.log('queuing event for replay');
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     domEventName,

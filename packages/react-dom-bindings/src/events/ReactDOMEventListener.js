@@ -156,6 +156,7 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
+  // ReactTracer.enter('dispatchEvent', domEventName);
   if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
     dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
       domEventName,
@@ -171,6 +172,7 @@ export function dispatchEvent(
       nativeEvent,
     );
   }
+  // ReactTracer.exit();
 }
 
 function dispatchEventOriginal(

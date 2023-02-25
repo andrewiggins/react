@@ -227,6 +227,7 @@ function executeDispatch(
   currentTarget: EventTarget,
 ): void {
   const type = event.type || 'unknown-event';
+  ReactTracer.log('dispatching on', currentTarget);
   event.currentTarget = currentTarget;
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
@@ -237,6 +238,10 @@ function processDispatchQueueItemsInOrder(
   dispatchListeners: Array<DispatchListener>,
   inCapturePhase: boolean,
 ): void {
+  ReactTracer.enter(
+    'processDispatchQueueItemsInOrder',
+    `React event: ${event.type}`,
+  );
   let previousInstance;
   if (inCapturePhase) {
     for (let i = dispatchListeners.length - 1; i >= 0; i--) {
@@ -257,6 +262,7 @@ function processDispatchQueueItemsInOrder(
       previousInstance = instance;
     }
   }
+  ReactTracer.exit();
 }
 
 export function processDispatchQueue(
@@ -291,7 +297,15 @@ function dispatchEventsForPlugins(
     eventSystemFlags,
     targetContainer,
   );
+  if (dispatchQueue.length) {
+    // React triggers a lot of dispatches for events like mousemove even when
+    // there are no listeners. So only log something if there is a listener
+    ReactTracer.enter('processDispatchQueue', `DOM event: ${domEventName}`);
+  }
   processDispatchQueue(dispatchQueue, eventSystemFlags);
+  if (dispatchQueue.length) {
+    ReactTracer.exit();
+  }
 }
 
 export function listenToNonDelegatedEvent(
