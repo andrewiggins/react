@@ -151,6 +151,8 @@ export function dispatchEvent(
     return;
   }
 
+  ReactTracer.enter('dispatchEvent', domEventName);
+
   // TODO: replaying capture phase events is currently broken
   // because we used to do it during top-level native bubble handlers
   // but now we use different bubble and capture handlers.
@@ -173,6 +175,8 @@ export function dispatchEvent(
       targetContainer,
       nativeEvent,
     );
+    ReactTracer.log('queuing event for replay');
+    ReactTracer.exit();
     return;
   }
 
@@ -188,6 +192,7 @@ export function dispatchEvent(
     if (allowReplay) {
       clearIfContinuousEvent(domEventName, nativeEvent);
     }
+    ReactTracer.exit();
     return;
   }
 
@@ -201,6 +206,8 @@ export function dispatchEvent(
         targetContainer,
         nativeEvent,
       );
+      ReactTracer.log('queuing event for replay');
+      ReactTracer.exit();
       return;
     }
     if (
@@ -212,6 +219,8 @@ export function dispatchEvent(
         nativeEvent,
       )
     ) {
+      ReactTracer.log('queuing event for replay');
+      ReactTracer.exit();
       return;
     }
     // We need to clear only if we didn't queue because
@@ -228,6 +237,7 @@ export function dispatchEvent(
     null,
     targetContainer,
   );
+  ReactTracer.exit();
 }
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.

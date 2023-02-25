@@ -224,6 +224,7 @@ function executeDispatch(
   currentTarget: EventTarget,
 ): void {
   const type = event.type || 'unknown-event';
+  ReactTracer.log('dispatching on', currentTarget);
   event.currentTarget = currentTarget;
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
@@ -234,6 +235,7 @@ function processDispatchQueueItemsInOrder(
   dispatchListeners: Array<DispatchListener>,
   inCapturePhase: boolean,
 ): void {
+  ReactTracer.enter('processDispatchQueueItemsInOrder', event.type);
   let previousInstance;
   if (inCapturePhase) {
     for (let i = dispatchListeners.length - 1; i >= 0; i--) {
@@ -254,6 +256,7 @@ function processDispatchQueueItemsInOrder(
       previousInstance = instance;
     }
   }
+  ReactTracer.exit();
 }
 
 export function processDispatchQueue(
