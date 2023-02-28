@@ -88,12 +88,12 @@ ${source}`;
 
   /***************** UMD_PROD *****************/
   [UMD_PROD](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
+    return source;
   },
 
   /***************** UMD_PROFILING *****************/
   [UMD_PROFILING](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
+    return source;
   },
 
   /***************** NODE_DEV *****************/

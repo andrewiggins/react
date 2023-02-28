@@ -94,7 +94,7 @@ const requestedBundleTypes = argv.type
   ? parseRequestedNames([argv.type], 'uppercase')
   : [];
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
-const forcePrettyOutput = argv.pretty;
+const forcePrettyOutput = true;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
@@ -389,7 +389,7 @@ function getPlugins(
 
     const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
 
-    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+    const needsMinifiedByClosure = false;
 
     // Any other packages that should specifically _not_ have sourcemaps
     const sourcemapPackageExcludes = [
@@ -730,7 +730,7 @@ async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = getFormat(bundleType);
+  const format = 'es';
   const packageName = Packaging.getPackageName(bundle.entry);
 
   const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
@@ -740,6 +740,8 @@ async function createBundle(bundle, bundleType) {
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
+
+  console.log(resolvedEntry);
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
@@ -928,27 +930,27 @@ async function buildEverything() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
     bundles.push(
-      [bundle, NODE_ES2015],
-      [bundle, ESM_DEV],
-      [bundle, ESM_PROD],
+      // [bundle, NODE_ES2015],
+      // [bundle, ESM_DEV],
+      // [bundle, ESM_PROD],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
-      [bundle, NODE_DEV],
-      [bundle, NODE_PROD],
-      [bundle, NODE_PROFILING],
-      [bundle, BUN_DEV],
-      [bundle, BUN_PROD],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING],
-      [bundle, BROWSER_SCRIPT]
+      [bundle, UMD_PROFILING]
+      // [bundle, NODE_DEV],
+      // [bundle, NODE_PROD],
+      // [bundle, NODE_PROFILING],
+      // [bundle, BUN_DEV],
+      // [bundle, BUN_PROD],
+      // [bundle, FB_WWW_DEV],
+      // [bundle, FB_WWW_PROD],
+      // [bundle, FB_WWW_PROFILING],
+      // [bundle, RN_OSS_DEV],
+      // [bundle, RN_OSS_PROD],
+      // [bundle, RN_OSS_PROFILING],
+      // [bundle, RN_FB_DEV],
+      // [bundle, RN_FB_PROD],
+      // [bundle, RN_FB_PROFILING],
+      // [bundle, BROWSER_SCRIPT]
     );
   }
 
