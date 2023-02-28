@@ -389,37 +389,37 @@ function getPlugins(
     // I'm going to port "art" to ES modules to avoid this problem.
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
-    // Apply dead code elimination and/or minification.
-    // closure doesn't yet support leaving ESM imports intact
-    isProduction &&
-      bundleType !== ESM_PROD &&
-      closure({
-        compilation_level: 'SIMPLE',
-        language_in: 'ECMASCRIPT_2020',
-        language_out:
-          bundleType === NODE_ES2015
-            ? 'ECMASCRIPT_2020'
-            : bundleType === BROWSER_SCRIPT
-            ? 'ECMASCRIPT5'
-            : 'ECMASCRIPT5_STRICT',
-        emit_use_strict:
-          bundleType !== BROWSER_SCRIPT &&
-          bundleType !== ESM_PROD &&
-          bundleType !== ESM_DEV,
-        env: 'CUSTOM',
-        warning_level: 'QUIET',
-        apply_input_source_maps: false,
-        use_types_for_optimization: false,
-        process_common_js_modules: false,
-        rewrite_polyfills: false,
-        inject_libraries: false,
-        allow_dynamic_import: true,
+    // // Apply dead code elimination and/or minification.
+    // // closure doesn't yet support leaving ESM imports intact
+    // isProduction &&
+    //   bundleType !== ESM_PROD &&
+    //   closure({
+    //     compilation_level: 'SIMPLE',
+    //     language_in: 'ECMASCRIPT_2020',
+    //     language_out:
+    //       bundleType === NODE_ES2015
+    //         ? 'ECMASCRIPT_2020'
+    //         : bundleType === BROWSER_SCRIPT
+    //         ? 'ECMASCRIPT5'
+    //         : 'ECMASCRIPT5_STRICT',
+    //     emit_use_strict:
+    //       bundleType !== BROWSER_SCRIPT &&
+    //       bundleType !== ESM_PROD &&
+    //       bundleType !== ESM_DEV,
+    //     env: 'CUSTOM',
+    //     warning_level: 'QUIET',
+    //     apply_input_source_maps: false,
+    //     use_types_for_optimization: false,
+    //     process_common_js_modules: false,
+    //     rewrite_polyfills: false,
+    //     inject_libraries: false,
+    //     allow_dynamic_import: true,
 
-        // Don't let it create global variables in the browser.
-        // https://github.com/facebook/react/issues/10909
-        assume_function_wrapper: !isUMDBundle,
-        renaming: !shouldStayReadable,
-      }),
+    //     // Don't let it create global variables in the browser.
+    //     // https://github.com/facebook/react/issues/10909
+    //     assume_function_wrapper: !isUMDBundle,
+    //     renaming: !shouldStayReadable,
+    //   }),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
@@ -540,7 +540,7 @@ async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = getFormat(bundleType);
+  const format = 'es';
   const packageName = Packaging.getPackageName(bundle.entry);
 
   const isFBWWWBundle =
@@ -557,6 +557,8 @@ async function createBundle(bundle, bundleType) {
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
+
+  console.log(resolvedEntry);
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -749,27 +751,27 @@ async function buildEverything() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
     bundles.push(
-      [bundle, NODE_ES2015],
-      [bundle, ESM_DEV],
-      [bundle, ESM_PROD],
+      // [bundle, NODE_ES2015],
+      // [bundle, ESM_DEV],
+      // [bundle, ESM_PROD],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
-      [bundle, NODE_DEV],
-      [bundle, NODE_PROD],
-      [bundle, NODE_PROFILING],
-      [bundle, BUN_DEV],
-      [bundle, BUN_PROD],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING],
-      [bundle, BROWSER_SCRIPT]
+      [bundle, UMD_PROFILING]
+      // [bundle, NODE_DEV],
+      // [bundle, NODE_PROD],
+      // [bundle, NODE_PROFILING],
+      // [bundle, BUN_DEV],
+      // [bundle, BUN_PROD],
+      // [bundle, FB_WWW_DEV],
+      // [bundle, FB_WWW_PROD],
+      // [bundle, FB_WWW_PROFILING],
+      // [bundle, RN_OSS_DEV],
+      // [bundle, RN_OSS_PROD],
+      // [bundle, RN_OSS_PROFILING],
+      // [bundle, RN_FB_DEV],
+      // [bundle, RN_FB_PROD],
+      // [bundle, RN_FB_PROFILING],
+      // [bundle, BROWSER_SCRIPT]
     );
   }
 
