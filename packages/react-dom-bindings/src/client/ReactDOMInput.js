@@ -93,6 +93,11 @@ export function updateInput(
   name: ?string,
 ) {
   const node: HTMLInputElement = (element: any);
+  ReactTracer.log('updateInput', {
+    element: element,
+    domValue: element.value,
+    propsValue: value,
+  });
 
   // Temporarily disconnect the input from any radio buttons.
   // Changing the type or name as the same time as changing the checked value
@@ -205,6 +210,7 @@ export function initInput(
   isHydrating: boolean,
 ) {
   const node: HTMLInputElement = (element: any);
+  ReactTracer.log('initInput', element);
 
   if (
     type != null &&

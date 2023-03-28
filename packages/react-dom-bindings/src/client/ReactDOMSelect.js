@@ -148,6 +148,7 @@ export function initSelect(
   defaultValue: ?string,
   multiple: ?boolean,
 ) {
+  ReactTracer.log('initSelect', element);
   const node: HTMLSelectElement = (element: any);
   node.multiple = !!multiple;
   if (value != null) {
@@ -165,6 +166,11 @@ export function updateSelect(
   wasMultiple: ?boolean,
 ) {
   const node: HTMLSelectElement = (element: any);
+  ReactTracer.log('updateSelect', {
+    element: element,
+    domValue: element.value,
+    propsValue: value,
+  });
 
   if (value != null) {
     updateOptions(node, !!multiple, value, false);
