@@ -63,6 +63,12 @@ export function updateTextarea(
   value: ?string,
   defaultValue: ?string,
 ) {
+  ReactTracer.log('updateTextarea', {
+    element: element,
+    domValue: element.value,
+    propsValue: value,
+  });
+
   const node: HTMLTextAreaElement = (element: any);
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
@@ -94,6 +100,7 @@ export function initTextarea(
   children: ?string,
 ) {
   const node: HTMLTextAreaElement = (element: any);
+  ReactTracer.log('initTextarea', element);
 
   let initialValue = value;
 
