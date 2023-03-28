@@ -61,6 +61,7 @@ export function validateProps(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
+  ReactTracer.log('postMountWrapper', element);
   // value="" should make a value attribute (#6219)
   if (props.value != null) {
     element.setAttribute('value', toString(getToStringValue(props.value)));

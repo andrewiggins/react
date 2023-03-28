@@ -137,6 +137,7 @@ export function getHostProps(element: Element, props: Object): Object {
 }
 
 export function initWrapperState(element: Element, props: Object) {
+  ReactTracer.log('initWrapperState', element);
   const node = ((element: any): SelectWithWrapperState);
   if (__DEV__) {
     checkSelectPropTypes(props);
@@ -165,6 +166,7 @@ export function initWrapperState(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
+  ReactTracer.log('postMountWrapper', element);
   const node = ((element: any): SelectWithWrapperState);
   node.multiple = !!props.multiple;
   const value = props.value;
@@ -176,6 +178,11 @@ export function postMountWrapper(element: Element, props: Object) {
 }
 
 export function postUpdateWrapper(element: Element, props: Object) {
+  ReactTracer.log('updateWrapper', {
+    element: element,
+    domValue: element.value,
+    propsValue: props.value,
+  });
   const node = ((element: any): SelectWithWrapperState);
   const wasMultiple = node._wrapperState.wasMultiple;
   node._wrapperState.wasMultiple = !!props.multiple;

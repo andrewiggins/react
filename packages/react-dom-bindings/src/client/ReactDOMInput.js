@@ -74,6 +74,7 @@ export function getHostProps(element: Element, props: Object): Object {
 }
 
 export function initWrapperState(element: Element, props: Object) {
+  ReactTracer.log('initWrapperState', element);
   if (__DEV__) {
     checkControlledValueProps('input', props);
 
@@ -135,6 +136,11 @@ export function updateChecked(element: Element, props: Object) {
 }
 
 export function updateWrapper(element: Element, props: Object) {
+  ReactTracer.log('updateWrapper', {
+    element: element,
+    domValue: element.value,
+    propsValue: props.value,
+  });
   const node = ((element: any): InputWithWrapperState);
   if (__DEV__) {
     const controlled = isControlled(props);
@@ -238,6 +244,7 @@ export function postMountWrapper(
   props: Object,
   isHydrating: boolean,
 ) {
+  ReactTracer.log('postMountWrapper', element);
   const node = ((element: any): InputWithWrapperState);
 
   // Do not assign value if it is already set. This prevents user text input

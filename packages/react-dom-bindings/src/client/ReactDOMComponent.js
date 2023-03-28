@@ -1289,15 +1289,19 @@ export function restoreControlledState(
   tag: string,
   props: Object,
 ): void {
+  ReactTracer.enter('restoreControlledState');
   switch (tag) {
     case 'input':
       ReactDOMInputRestoreControlledState(domElement, props);
+      ReactTracer.exit();
       return;
     case 'textarea':
       ReactDOMTextareaRestoreControlledState(domElement, props);
+      ReactTracer.exit();
       return;
     case 'select':
       ReactDOMSelectRestoreControlledState(domElement, props);
+      ReactTracer.exit();
       return;
   }
 }

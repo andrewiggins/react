@@ -63,6 +63,7 @@ export function getHostProps(element: Element, props: Object): Object {
 }
 
 export function initWrapperState(element: Element, props: Object) {
+  ReactTracer.log('initWrapperState', element);
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -126,6 +127,11 @@ export function initWrapperState(element: Element, props: Object) {
 }
 
 export function updateWrapper(element: Element, props: Object) {
+  ReactTracer.log('updateWrapper', {
+    element: element,
+    domValue: element.value,
+    propsValue: props.value,
+  });
   const node = ((element: any): TextAreaWithWrapperState);
   const value = getToStringValue(props.value);
   const defaultValue = getToStringValue(props.defaultValue);
@@ -147,6 +153,7 @@ export function updateWrapper(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
+  ReactTracer.log('postMountWrapper', element);
   const node = ((element: any): TextAreaWithWrapperState);
   // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
