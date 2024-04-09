@@ -730,7 +730,7 @@ async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = 'es';
+  const format = getFormat(bundleType) === 'umd' ? 'es' : getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
   const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
@@ -936,6 +936,7 @@ async function buildEverything() {
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING]
+      // Enable NODE_* to build react-cache
       // [bundle, NODE_DEV],
       // [bundle, NODE_PROD],
       // [bundle, NODE_PROFILING],
