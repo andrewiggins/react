@@ -14,6 +14,8 @@ process.on('unhandledRejection', err => {
 // Ensure environment variables are read.
 require('../config/env');
 
+const rollup = require('rollup');
+
 const path = require('path');
 const chalk = require('chalk');
 const fs = require('fs-extra');
@@ -123,11 +125,17 @@ checkBrowsers(paths.appPath, isInteractive)
       }
     }
   )
+  .then(async () => {
+    const config = (await import('../config/rollup.config.mjs')).default;
+    const bundle = await rollup.rollup(config);
+    await bundle.write(config.output);
+  })
   .catch(err => {
-    if (err && err.message) {
-      console.log(err.message);
-    }
-    process.exit(1);
+    // if (err && err.message) {
+    //   console.error(err.message);
+    // }
+    // process.exit(1);
+    throw err;
   });
 
 // Create the production build and print the deployment instructions.
