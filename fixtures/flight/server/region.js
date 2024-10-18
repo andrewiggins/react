@@ -8,25 +8,25 @@ const url = require('url');
 const register = require('react-server-dom-webpack/node-register');
 register();
 
-const babelRegister = require('@babel/register');
-babelRegister({
-  babelrc: false,
-  ignore: [
-    /\/(build|node_modules)\//,
-    function (file) {
-      if ((path.dirname(file) + '/').startsWith(__dirname + '/')) {
-        // Ignore everything in this folder
-        // because it's a mix of CJS and ESM
-        // and working with raw code is easier.
-        return true;
-      }
-      return false;
-    },
-  ],
-  presets: ['@babel/preset-react'],
-  plugins: ['@babel/transform-modules-commonjs'],
-  sourceMaps: process.env.NODE_ENV === 'development' ? 'inline' : false,
-});
+// const babelRegister = require('@babel/register');
+// babelRegister({
+//   babelrc: false,
+//   ignore: [
+//     /\/(build|node_modules)\//,
+//     function (file) {
+//       if ((path.dirname(file) + '/').startsWith(__dirname + '/')) {
+//         // Ignore everything in this folder
+//         // because it's a mix of CJS and ESM
+//         // and working with raw code is easier.
+//         return true;
+//       }
+//       return false;
+//     },
+//   ],
+//   presets: ['@babel/preset-react'],
+//   plugins: ['@babel/transform-modules-commonjs'],
+//   sourceMaps: process.env.NODE_ENV === 'development' ? 'inline' : false,
+// });
 
 if (typeof fetch === 'undefined') {
   // Patch fetch for earlier Node versions.
@@ -55,7 +55,8 @@ async function renderApp(res, returnValue, formState) {
     'react-server-dom-webpack/server'
   );
   // const m = require('../src/App.js');
-  const m = await import('../src/App.js');
+  // const m = await import('../src/App.js');
+  const m = await import('../build-rsc/App.js');
 
   let moduleMap;
   let mainCSSChunks;
