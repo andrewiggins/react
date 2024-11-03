@@ -243,6 +243,25 @@ app.get('/todos', function (req, res) {
 if (process.env.NODE_ENV === 'development') {
   const rootDir = path.resolve(__dirname, '../');
 
+  const {rollup} = require('rollup');
+  const ensureArray = value => (Array.isArray(value) ? value : [value]);
+  const rollupPromise = import('../config/rollup.config.mjs')
+    .then(m => m.default)
+    .then(async rollupConfig => [rollupConfig, await rollup(rollupConfig)])
+    .then(([rollupConfig, bundle]) =>
+      Promise.all(
+        ensureArray(rollupConfig.output).map(output => bundle.write(output))
+      )
+    )
+    .then(() => {
+      console.log('Rollup build complete');
+    });
+
+  app.use(async (_, __, next) => {
+    await rollupPromise;
+    next();
+  });
+
   app.get('/source-maps', async function (req, res, next) {
     try {
       res.set('Content-type', 'application/json');
