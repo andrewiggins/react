@@ -101,13 +101,13 @@ export default defineConfig({
             //   ? resolvedId?.id
             //   : pathToFileURL(resolvedId.id).href;
 
-            console.log('react is resolving', {
-              id,
-              parent,
-              resolvedBy: resolvedId?.resolvedBy,
-              resolvedId: resolvedId?.id,
-              // resolvedURL: resolvedURL,
-            });
+            // console.log('react is resolving', {
+            //   id,
+            //   parent,
+            //   resolvedBy: resolvedId?.resolvedBy,
+            //   resolvedId: resolvedId?.id,
+            //   // resolvedURL: resolvedURL,
+            // });
             return {url: resolvedId?.id};
           };
 
@@ -147,10 +147,10 @@ export default defineConfig({
             }
           };
 
-          console.log('transforming', url);
+          // console.log('transforming', url);
           const result = await reactLoad(url, context, defaultLoad);
-          console.log('transformed ', url);
-          console.log('\t', result.source);
+          // console.log('transformed ', url);
+          // console.log('\t', result.source);
           return result.source;
         },
       };
