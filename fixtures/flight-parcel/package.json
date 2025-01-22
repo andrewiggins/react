@@ -17,11 +17,11 @@
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prebuild": "rm -r dist/* && cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:watch\" \"sleep 2 && npm run dev:start\"",
     "dev:watch": "NODE_ENV=development parcel watch",
     "dev:start": "NODE_ENV=development node dist/server.js",
-    "build": "parcel build",
+    "build": "parcel build --no-optimize --no-scope-hoist --no-content-hash --no-cache",
     "start": "node dist/server.js"
   },
   "@parcel/resolver-default": {
