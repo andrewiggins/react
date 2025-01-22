@@ -95,7 +95,7 @@ const requestedBundleNames = parseRequestedNames(
   names ? names : [],
   'lowercase'
 );
-const forcePrettyOutput = argv.pretty;
+const forcePrettyOutput = true;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
@@ -373,8 +373,9 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const needsMinifiedByClosure =
-      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+    // const needsMinifiedByClosure =
+    //   bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+    const needsMinifiedByClosure = false;
 
     return [
       // Keep dynamic imports as externals
@@ -825,24 +826,24 @@ async function buildEverything() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
     bundles.push(
-      [bundle, NODE_ES2015],
+      // [bundle, NODE_ES2015],
       [bundle, ESM_DEV],
       [bundle, ESM_PROD],
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
-      [bundle, BUN_DEV],
-      [bundle, BUN_PROD],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING],
-      [bundle, BROWSER_SCRIPT]
+      // [bundle, BUN_DEV],
+      // [bundle, BUN_PROD],
+      // [bundle, FB_WWW_DEV],
+      // [bundle, FB_WWW_PROD],
+      // [bundle, FB_WWW_PROFILING],
+      // [bundle, RN_OSS_DEV],
+      // [bundle, RN_OSS_PROD],
+      // [bundle, RN_OSS_PROFILING],
+      // [bundle, RN_FB_DEV],
+      // [bundle, RN_FB_PROD],
+      // [bundle, RN_FB_PROFILING],
+      // [bundle, BROWSER_SCRIPT]
     );
   }
 
