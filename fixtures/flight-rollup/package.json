@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "rm -rf build-* && cp -r ../../build/oss-experimental/* ./node_modules/",
-    "postbuild": "prettier --ignore-path none --write build-rsc/**/*.js",
+    "postbuild": "prettier --no-config --ignore-path none --no-error-on-unmatched-pattern --write build-rsc/**/*.{js,css,html,json}",
     "dev": "concurrently \"npm run dev:rsc\" \"npm run dev:ssr\"",
     "dev:ssr": "NODE_ENV=development BUILD_PATH=dist node --inspect=127.0.0.1:9230 server/ssr-server.js",
     "dev:rsc": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --conditions=react-server --inspect=127.0.0.1:9229 server/rsc-server.js",
