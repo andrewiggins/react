@@ -19,11 +19,12 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 /** @type {(...args: string[]) => string} */
 const p = (...args) => path.join(__dirname, ...args);
 
+/** @type {() => import('rollup').Plugin} */
 function babelPlugin() {
   return {
     name: 'rsc-babel',
     async transform(inputCode, filename) {
-      const {code, map} = await transformAsync(inputCode, {
+      const result = await transformAsync(inputCode, {
         plugins: [
           '@babel/plugin-syntax-import-meta',
           '@babel/plugin-transform-react-jsx',
@@ -31,14 +32,19 @@ function babelPlugin() {
         ],
       });
 
+      if (!result || !result.code) {
+        throw new Error(`Babel transform failed on ${filename}`);
+      }
+
       return {
-        code,
-        map,
+        code: result.code,
+        map: result.map,
       };
     },
   };
 }
 
+/** @type {() => import('rollup').Plugin} */
 function rscPlugin() {
   let resolverSetup = false;
 
@@ -63,23 +69,12 @@ function rscPlugin() {
           ? fileURLToPath(context.parentURL)
           : context.parentURL;
 
-        /** @typedef { id: string } ResolvedId */
-        const resolvedId = await this.resolve(id, parent, {
-          // skipSelf: true,
-        });
+        const resolvedId = await this.resolve(id, parent);
+        if (!resolvedId) {
+          throw new Error(`Could not resolve ${id} from ${parent}`);
+        }
 
-        // const resolvedURL = !resolvedId?.id?.startsWith('file://')
-        //   ? resolvedId?.id
-        //   : pathToFileURL(resolvedId.id).href;
-
-        // console.log('react is resolving', {
-        //   id,
-        //   parent,
-        //   resolvedBy: resolvedId?.resolvedBy,
-        //   resolvedId: resolvedId?.id,
-        //   // resolvedURL: resolvedURL,
-        // });
-        return {url: resolvedId?.id};
+        return {url: resolvedId.id};
       };
 
       resolverSetup = true;
@@ -89,19 +84,17 @@ function rscPlugin() {
     },
     async transform(input, id) {
       const url = pathToFileURL(id).href;
-      /**
-       * @typedef LoadContext
-       * @property {string[]} conditions
-       * @property {string | null | undefined} format
-       * @property {Object} importAssertions
-       */
+
+      /** @typedef {{ conditions: string[]; format?: string | null | undefined; importAssertions: Record<string, any>; }} LoadContext */
+      /** @type {LoadContext} */
       const context = {
         conditions: ['react-server'],
         format: 'module',
         importAssertions: {},
       };
+
       /**
-       * @typedef {format: string, shortCircuit?: boolean, source: Source} LoadResult
+       * @typedef {{ format: string, shortCircuit?: boolean, source: string }} LoadResult
        * @typedef {(url: string, context: LoadContext, defaultLoad: LoadFunction) => Promise<LoadResult>} LoadFunction
        * @type {LoadFunction}
        */
@@ -112,14 +105,12 @@ function rscPlugin() {
           return {format: 'module', source: input};
         } else {
           const loadResult = await this.load({id: idToLoad});
+          if (!loadResult.code) throw new Error(`Could not load ${idToLoad}`);
           return {format: 'module', source: loadResult.code};
         }
       };
 
-      // console.log('transforming', url);
       const result = await reactLoad(url, context, defaultLoad);
-      // console.log('transformed ', url);
-      // console.log('\t', result.source);
       return result.source;
     },
   };
