@@ -48,9 +48,24 @@ function babelPlugin() {
 function rscPlugin() {
   let resolverSetup = false;
 
+  const SSR_SUFFIX = '.ssr-client.js';
+  /** @type {(id: string, suffix: string) => boolean} */
+  const isWrappedId = (id, suffix) => id.endsWith(suffix);
+  /** @type {(id: string, suffix: string) => string} */
+  const wrapId = (id, suffix) => `${id}${suffix}`;
+  /** @type {(id: string, suffix: string) => string} */
+  const unwrapId = (wrappedId, suffix) => wrappedId.slice(0, -suffix.length);
+
+  const untransformedSource = new Map();
+
   return {
     name: 'rsc-transform',
     async resolveId(id, importer, options) {
+      if (isWrappedId(id, SSR_SUFFIX)) {
+        console.log('resolveId', {id, importer});
+        return id;
+      }
+
       if (resolverSetup) {
         return null;
       }
@@ -82,7 +97,25 @@ function rscPlugin() {
       await reactResolve(id, context, defaultResolve);
       return this.resolve(id, importer, options);
     },
+    async load(id) {
+      // Handle SSR module loads
+      if (!isWrappedId(id, SSR_SUFFIX)) {
+        return null;
+      }
+
+      const originalId = unwrapId(id, SSR_SUFFIX);
+      const code = untransformedSource.get(originalId);
+      console.log('load', {id, originalId, code});
+
+      return {code};
+    },
     async transform(input, id) {
+      if (isWrappedId(id, SSR_SUFFIX)) {
+        console.log('skipping transform', {id});
+        return null;
+      }
+
+      // Transform modules into client/server references
       const url = pathToFileURL(id).href;
 
       /** @typedef {{ conditions: string[]; format?: string | null | undefined; importAssertions: Record<string, any>; }} LoadContext */
@@ -110,8 +143,55 @@ function rscPlugin() {
         }
       };
 
-      const result = await reactLoad(url, context, defaultLoad);
-      return result.source;
+      /** @type {LoadResult} */
+      let {source} = await reactLoad(url, context, defaultLoad);
+
+      if (source !== input) {
+        console.log(`Transformed ${id}`);
+
+        if (source.includes('registerClientReference')) {
+          // We need to emit an SSR chunk for this module that includes original
+          // source, and collect references to build the SSR manifest.
+          const refID = this.emitFile({
+            type: 'chunk',
+            // id: wrapId('test1', SSR_SUFFIX),
+            id: wrapId(id, SSR_SUFFIX),
+          });
+
+          source = source.replaceAll(url, refID);
+
+          untransformedSource.set(id, input);
+
+          // TODO: Emit a manifest file with all SSR chunks mapping refID to ssr-chunk.
+        } else if (source.includes('registerServerReference')) {
+          // Emit a referenceable chunk that the RSC runtime can import to invoke server actions.
+          const refID = this.emitFile({
+            type: 'chunk',
+            id,
+            // Removes need for a facade chunk to maintain the exact export signature of the original module.
+            preserveSignature: 'allow-extension',
+          });
+
+          source = source.replaceAll(
+            `"${url}"`,
+            `import.meta.ROLLUP_FILE_URL_${refID}`
+          );
+        } else {
+          throw new Error(`Unexpected source transformation for ${id}`);
+        }
+
+        if (id.includes('ShowMore.js') || id.includes('actions.js')) {
+          console.log(
+            source
+              .split('\n')
+              .map((line, i) => `${i + 1}: ${line}`)
+              .join('\n')
+          );
+        }
+        console.log();
+      }
+
+      return source;
     },
   };
 }
