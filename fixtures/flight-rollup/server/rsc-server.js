@@ -12,61 +12,60 @@ import bodyParser from 'body-parser';
 import busboy from 'busboy';
 import compress from 'compression';
 
-const app = express();
+// For RSC HTML rendering
+import {renderToPipeableStream} from 'react-server-dom-webpack/server';
+// For RSC prerendering
+import {unstable_prerenderToNodeStream as prerenderToNodeStream} from 'react-server-dom-webpack/static';
+// For RSC Server Actions
+import {
+  decodeReply,
+  decodeReplyFromBusboy,
+  decodeAction,
+  decodeFormState,
+} from 'react-server-dom-webpack/server';
 
+import App from '../src/App.js';
+
+const app = express();
 app.use(compress());
 
 // Application
 
 async function renderApp(res, returnValue, formState) {
-  const {renderToPipeableStream} = await import(
-    'react-server-dom-webpack/server'
-  );
+  // const {renderToPipeableStream} = await import(
+  //   'react-server-dom-webpack/server'
+  // );
 
-  const m = await import('../src/App.js');
+  // const m = await import('../src/App.js');
+  // const App = m.default.default || m.default;
 
   // TODO: Implement this
-  let moduleMap = {};
-  let mainCSSChunks = [];
-  // if (process.env.NODE_ENV === 'development') {
-  //   // Read the module map from the HMR server in development.
-  //   moduleMap = await (
-  //     await fetch('http://localhost:3000/react-client-manifest.json')
-  //   ).json();
-  //   mainCSSChunks = (
-  //     await (
-  //       await fetch('http://localhost:3000/entrypoint-manifest.json')
-  //     ).json()
-  //   ).main.css;
-  // } else {
-  //   // Read the module map from the static build in production.
-  //   moduleMap = JSON.parse(
-  //     await readFile(
-  //       path.resolve(__dirname, `../build/react-client-manifest.json`),
-  //       'utf8'
-  //     )
-  //   );
-  //   mainCSSChunks = JSON.parse(
-  //     await readFile(
-  //       path.resolve(__dirname, `../build/entrypoint-manifest.json`),
-  //       'utf8'
-  //     )
-  //   ).main.css;
-  // }
+  let moduleMap = JSON.parse(
+    await readFile(
+      path.resolve(__dirname, `../build-rsc/react-client-manifest.json`),
+      'utf8'
+    )
+  );
 
-  const App = m.default.default || m.default;
+  // const mainCSSChunks = JSON.parse(
+  //   await readFile(
+  //     path.resolve(__dirname, `../build/entrypoint-manifest.json`),
+  //     'utf8'
+  //   )
+  // ).main.css;
+
   const root = React.createElement(
     React.Fragment,
     null,
-    // Prepend the App's tree with stylesheets required for this entrypoint.
-    mainCSSChunks.map(filename =>
-      React.createElement('link', {
-        rel: 'stylesheet',
-        href: filename,
-        precedence: 'default',
-        key: filename,
-      })
-    ),
+    // // Prepend the App's tree with stylesheets required for this entrypoint.
+    // mainCSSChunks.map(filename =>
+    //   React.createElement('link', {
+    //     rel: 'stylesheet',
+    //     href: filename,
+    //     precedence: 'default',
+    //     key: filename,
+    //   })
+    // ),
     React.createElement(App)
   );
   // For client-invoked server actions we refresh the tree and return a return value.
@@ -76,54 +75,41 @@ async function renderApp(res, returnValue, formState) {
 }
 
 async function prerenderApp(res, returnValue, formState) {
-  const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
-    'react-server-dom-webpack/static'
-  );
+  // const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
+  //   'react-server-dom-webpack/static'
+  // );
 
-  const m = await import('../src/App.js');
+  // const m = await import('../src/App.js');
+  // const App = m.default.default || m.default;
 
   // TODO: Implement this
-  let moduleMap = {};
-  let mainCSSChunks = [];
-  // if (process.env.NODE_ENV === 'development') {
-  //   // Read the module map from the HMR server in development.
-  //   moduleMap = await (
-  //     await fetch('http://localhost:3000/react-client-manifest.json')
-  //   ).json();
-  //   mainCSSChunks = (
-  //     await (
-  //       await fetch('http://localhost:3000/entrypoint-manifest.json')
-  //     ).json()
-  //   ).main.css;
-  // } else {
-  //   // Read the module map from the static build in production.
-  //   moduleMap = JSON.parse(
-  //     await readFile(
-  //       path.resolve(__dirname, `../build/react-client-manifest.json`),
-  //       'utf8'
-  //     )
-  //   );
-  //   mainCSSChunks = JSON.parse(
-  //     await readFile(
-  //       path.resolve(__dirname, `../build/entrypoint-manifest.json`),
-  //       'utf8'
-  //     )
-  //   ).main.css;
-  // }
+  // Read the module map from the static build in production.
+  const moduleMap = JSON.parse(
+    await readFile(
+      path.resolve(__dirname, `../build/react-client-manifest.json`),
+      'utf8'
+    )
+  );
 
-  const App = m.default.default || m.default;
+  // const mainCSSChunks = JSON.parse(
+  //   await readFile(
+  //     path.resolve(__dirname, `../build/entrypoint-manifest.json`),
+  //     'utf8'
+  //   )
+  // ).main.css;
+
   const root = React.createElement(
     React.Fragment,
     null,
-    // Prepend the App's tree with stylesheets required for this entrypoint.
-    mainCSSChunks.map(filename =>
-      React.createElement('link', {
-        rel: 'stylesheet',
-        href: filename,
-        precedence: 'default',
-        key: filename,
-      })
-    ),
+    // // Prepend the App's tree with stylesheets required for this entrypoint.
+    // mainCSSChunks.map(filename =>
+    //   React.createElement('link', {
+    //     rel: 'stylesheet',
+    //     href: filename,
+    //     precedence: 'default',
+    //     key: filename,
+    //   })
+    // ),
     React.createElement(App, {prerender: true})
   );
 
@@ -142,8 +128,8 @@ app.get('/', async function (req, res) {
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
-  const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
-    await import('react-server-dom-webpack/server');
+  // const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
+  //   await import('react-server-dom-webpack/server');
 
   const serverReference = req.get('rsc-action');
   if (serverReference) {
@@ -179,11 +165,12 @@ app.post('/', bodyParser.text(), async function (req, res) {
     renderApp(res, result, null);
   } else {
     // This is the progressive enhancement case
-    // TODO: Fix this
+    /** @type {any} */ // TODO Fix types
+    const body = Readable.toWeb(req.body);
     const fakeRequest = new Request('http://localhost', {
       method: 'POST',
       headers: {'Content-Type': req.headers['content-type'] ?? ''},
-      body: Readable.toWeb(req),
+      body,
       // duplex: 'half',
     });
     const formData = await fakeRequest.formData();
@@ -220,7 +207,10 @@ if (process.env.NODE_ENV === 'development') {
   app.get('/source-maps', async function (req, res, next) {
     try {
       res.set('Content-type', 'application/json');
-      let requestedFilePath = req.query.name;
+      let requestedFilePath = req.query.name ?? '';
+      if (typeof requestedFilePath !== 'string') {
+        throw new Error(`Invalid request: "name" should be a string`);
+      }
 
       let isCompiledOutput = false;
       if (requestedFilePath.startsWith('file://')) {
